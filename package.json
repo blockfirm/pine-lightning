@@ -21,11 +21,12 @@
     "url": "https://github.com/blockfirm/pine-lightning.git"
   },
   "dependencies": {
+    "@grpc/proto-loader": "^0.5.1",
     "bip32": "^2.0.4",
     "bip39": "^3.0.2",
     "bitcoinjs-lib": "^4.0.5",
     "create-hash": "^1.2.0",
-    "restify": "^7.2.1",
+    "grpc": "^1.22.2",
     "secp256k1": "^3.7.1"
   },
   "devDependencies": {
@@ -39,7 +40,6 @@
     "coveralls": "^3.0.2",
     "debounce": "^1.2.0",
     "eslint": "^4.7.1",
-    "grpc": "^1.22.2",
     "lnrpc": "^0.6.1",
     "mocha": "^5.2.0",
     "nyc": "^14.1.1",

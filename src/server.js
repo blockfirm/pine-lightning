@@ -1,18 +1,29 @@
-import restify from 'restify';
+import grpc from 'grpc';
+import * as protoLoader from '@grpc/proto-loader';
+
 import config from './config';
-import setupRoutes from './setupRoutes';
+import methods from './methods';
 
-const server = restify.createServer();
+const packageDefinition = protoLoader.loadSync(
+  config.rpc.proto, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true
+  }
+);
 
-server.use(restify.plugins.bodyParser({
-  mapParams: true
-}));
+const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
+const Pine = protoDescriptor.Pine;
 
-server.use(restify.plugins.queryParser());
-server.use(restify.plugins.throttle(config.api.rateLimit));
+const getPineServer = () => {
+  const server = new grpc.Server();
+  server.addService(Pine.service, methods);
+  return server;
+};
 
-setupRoutes(server);
+const pineServer = getPineServer();
 
-server.listen(config.api.port, () => {
-  console.log('Pine Lightning is listening at %s', server.url);
-});
+pineServer.bind(`0.0.0.0:${config.rpc.port}`, grpc.ServerCredentials.createInsecure());
+pineServer.start();

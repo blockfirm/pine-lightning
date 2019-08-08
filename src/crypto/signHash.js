@@ -10,7 +10,7 @@ const encodeSignature = (signature, compressed) => {
   return Buffer.concat([
     Buffer.alloc(1, recovery + 27),
     signature.signature
-  ]).toString('base64');
+  ]);
 };
 
 /**
@@ -19,7 +19,7 @@ const encodeSignature = (signature, compressed) => {
  * @param {Buffer} hash - Hash to sign.
  * @param {Object} keyPair - bitcoinjs key pair.
  *
- * @returns {string} A base64 formatted secp256k1 signature of the specified hash.
+ * @returns {Buffer} A secp256k1 signature of the specified hash.
  */
 const signHash = (hash, keyPair) => {
   const signature = secp256k1.sign(hash, keyPair.privateKey);
