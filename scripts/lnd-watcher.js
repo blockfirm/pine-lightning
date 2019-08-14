@@ -74,6 +74,13 @@ const startLnd = () => {
   });
 };
 
+const stopLnd = () => {
+  if (lndProcess) {
+    lndProcess.kill();
+    lndProcess = null;
+  }
+};
+
 const unlock = async () => {
   console.log('Unlocking wallet...');
   const lnrpc = await createLnrpc({ macaroonPath: MACAROON_PATH });
@@ -83,7 +90,13 @@ const unlock = async () => {
 const connect = async () => {
   console.log('Connecting to jabberwork...');
   const lnrpc = await createLnrpc({ macaroonPath: MACAROON_PATH });
-  return lnrpc.connectPeer({ addr: '03a2e519c18af595810be478fa65ea4832ccc1e174d19386849860c5a9013e73d8@localhost:10012' });
+
+  return lnrpc.connectPeer({
+    addr: {
+      pubkey: '03a2e519c18af595810be478fa65ea4832ccc1e174d19386849860c5a9013e73d8',
+      host: 'localhost:10012'
+    }
+  });
 };
 
 const start = () => {
@@ -103,7 +116,10 @@ const onFileChanged = () => {
   make()
     .then(makeInstall)
     .then(start)
-    .catch(onError);
+    .catch((error) => {
+      stopLnd();
+      onError(error);
+    });
 };
 
 const eventHandler = debounce(onFileChanged, 1000);
