@@ -1,17 +1,18 @@
 syntax = "proto3";
 
 service Pine {
-    // Signs the provided message digest. The returned
-    // signature is a pubkey-recoverable signature.
-    rpc SignDigestCompact(SignDigestCompactRequest) returns (SignDigestCompactResponse) {}
+    rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
 }
 
-message SignDigestCompactRequest {
-    // Hash of message to sign.
-    bytes hash = 1;
+message SignMessageRequest {
+    // Message to sign.
+    bytes message = 1;
+
+    // Public key of the private key to sign with (65 bytes uncompressed).
+    bytes publicKey = 2;
 }
 
-message SignDigestCompactResponse {
-    // Signature of the given hash.
+message SignMessageResponse {
+    // Signature of the given message (DER-encoded).
     bytes signature = 1;
 }

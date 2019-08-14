@@ -1,6 +1,6 @@
-import signDigestCompact from './signDigestCompact';
+import signMessage from './signMessage';
 
 export default {
-  signDigestCompact
+  signMessage
 };
 

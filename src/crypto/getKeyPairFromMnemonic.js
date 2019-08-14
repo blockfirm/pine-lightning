@@ -1,22 +1,25 @@
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
 
-const PURPOSE_CODE = 428;
+const PURPOSE_CODE_1017 = 1017;
+const COIN_TYPE_TESTNET = 1;
 
 /**
- * Gets a key pair from a mnemonic to be used with the Pine Payment Protocol.
+ * Gets a key pair from a mnemonic and account index.
  *
- * @param {string} mnemonic - A 12-word mnemonic.
+ * @param {string} mnemonic - A mnemonic of 24 words separated by space.
+ * @param {number} accountIndex - Account index to get key pair for (defaults to 0).
+ * @param {number} addressIndex - Address index to get key pair for (defaults to 0).
  *
- * @returns {Object} A bitcoinjs key pair that is derived from the bip32 path "m/428'/{accountIndex}'".
+ * @returns {Object} A bitcoinjs key pair that is derived from the bip44 path "m/1017'/1'/0/{accountIndex}'".
  */
-const getKeyPairFromMnemonic = (mnemonic, accountIndex = 0) => {
+const getKeyPairFromMnemonic = (mnemonic, accountIndex = 0, addressIndex = 0) => {
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const masterNode = bip32.fromSeed(seed);
-  const path = `m/${PURPOSE_CODE}'/${accountIndex}'`;
+  const path = `m/${PURPOSE_CODE_1017}'/${COIN_TYPE_TESTNET}'/${accountIndex}'/0/${addressIndex}`;
   const keyPair = masterNode.derivePath(path);
 
-  keyPair.compressed = true;
+  //keyPair.compressed = true;
 
   return keyPair;
 };
