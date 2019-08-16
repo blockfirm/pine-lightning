@@ -1,18 +1,42 @@
 syntax = "proto3";
 
 service Pine {
-    rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
+  rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
+  rpc ListUnspentWitness(ListUnspentWitnessRequest) returns (ListUnspentWitnessResponse) {}
 }
 
 message SignMessageRequest {
-    // Message to sign.
-    bytes message = 1;
+  // Message to sign.
+  bytes message = 1;
 
-    // Public key of the private key to sign with (65 bytes uncompressed).
-    bytes publicKey = 2;
+  // Public key of the private key to sign with (65 bytes uncompressed).
+  bytes publicKey = 2;
 }
 
 message SignMessageResponse {
-    // Signature of the given message (DER-encoded).
-    bytes signature = 1;
+  // Signature of the given message (DER-encoded).
+  bytes signature = 1;
+}
+
+message ListUnspentWitnessRequest {
+  int32 minConfirmations = 1;
+  int32 maxConfirmations = 2;
+}
+
+message ListUnspentWitnessResponse {
+  repeated Utxo utxos = 1;
+}
+
+message Utxo {
+  uint32 addressType = 1;
+  int64 value = 2; // In satoshis.
+  int64 confirmations = 3;
+  bytes pkScript = 4;
+  OutPoint outPoint = 5;
+}
+
+// OutPoint represents a transaction output.
+message OutPoint {
+  bytes hash = 1; // Transaction ID of the output.
+  uint32 index = 2; // Index of the transaction output (vout).
 }
