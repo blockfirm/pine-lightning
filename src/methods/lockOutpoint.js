@@ -1,4 +1,4 @@
-const lockedOutpoints = {};
+export const lockedOutpoints = {};
 
 const lockOutpoint = ({ request }, callback) => {
   console.log(`lockOutpoint(${request.hash.toString('hex')}, ${request.index})`);

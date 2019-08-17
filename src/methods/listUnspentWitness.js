@@ -1,8 +1,16 @@
 import btcwallet from '../btcwallet';
+import { lockedOutpoints } from './lockOutpoint';
 
 const ADDRESS_TYPE_UNKNOWN = 0;
 const ADDRESS_TYPE_WITNESS_PUBKEY = 1;
 const ADDRESS_TYPE_NESTED_WITNESS_PUBKEY = 2;
+
+const excludeLockedOutpoints = (utxos) => {
+  return utxos.filter(utxo => {
+    const txid = utxo.transactionHash.toString('hex');
+    return !(lockedOutpoints[txid] && lockedOutpoints[txid][utxo.vout]);
+  });
+};
 
 const listUnspentWitness = ({ request }, callback) => {
   console.log(`listUnspentWitness(${request.minConfirmations}, ${request.maxConfirmations})`);
@@ -40,7 +48,7 @@ const listUnspentWitness = ({ request }, callback) => {
         vout: output.output_index
       }));
 
-      callback(null, { utxos });
+      callback(null, { utxos: excludeLockedOutpoints(utxos) });
     });
   });
 };
