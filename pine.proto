@@ -3,6 +3,9 @@ syntax = "proto3";
 service Pine {
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
   rpc ListUnspentWitness(ListUnspentWitnessRequest) returns (ListUnspentWitnessResponse) {}
+
+  // LockOutpoint marks an unspent transaction output as reserved.
+  rpc LockOutpoint(LockOutpointRequest) returns (LockOutpointResponse) {}
 }
 
 message SignMessageRequest {
@@ -35,4 +38,11 @@ message Utxo {
   bytes transactionHash = 5; // txid
   uint32 vout = 6; // Index of the output in the transaction
 }
+
+message LockOutpointRequest {
+  bytes hash = 1; // Hash of the output's transaction (txid)
+  uint32 index = 2; // Index of the output in the transaction
+}
+
+message LockOutpointResponse {}
 
