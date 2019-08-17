@@ -11,6 +11,9 @@ service Pine {
   // UnlockOutpoint unmarks an unspent transaction output as reserved making
   // it eligible for coin selection.
   rpc UnlockOutpoint(UnlockOutpointRequest) returns (UnlockOutpointResponse) {}
+
+  // NewAddress returns the next external or internal address for the wallet.
+  rpc NewAddress(NewAddressRequest) returns (NewAddressResponse) {}
 }
 
 message SignMessageRequest {
@@ -58,3 +61,11 @@ message UnlockOutpointRequest {
 
 message UnlockOutpointResponse {}
 
+message NewAddressRequest {
+  uint32 addressType = 1;
+  bool change = 2; // If true, an internal address is returned
+}
+
+message NewAddressResponse {
+    bytes hash = 1; // A ripemd160 hash of the address
+}
