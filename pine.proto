@@ -29,14 +29,10 @@ message ListUnspentWitnessResponse {
 
 message Utxo {
   uint32 addressType = 1;
-  int64 value = 2; // In satoshis.
+  int64 value = 2; // In satoshis
   int64 confirmations = 3;
   bytes pkScript = 4;
-  OutPoint outPoint = 5;
+  bytes transactionHash = 5; // txid
+  uint32 vout = 6; // Index of the output in the transaction
 }
 
-// OutPoint represents a transaction output.
-message OutPoint {
-  bytes hash = 1; // Transaction ID of the output.
-  uint32 index = 2; // Index of the transaction output (vout).
-}

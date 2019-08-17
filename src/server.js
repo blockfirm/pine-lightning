@@ -35,5 +35,5 @@ methods.listUnspentWitness({ request: { minConfirmations: 1, maxConfirmations: -
     return console.error(error.message);
   }
 
-  console.log(response);
+  console.log(JSON.stringify(response.utxos[0]));
 });
