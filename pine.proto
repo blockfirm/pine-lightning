@@ -4,8 +4,13 @@ service Pine {
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
   rpc ListUnspentWitness(ListUnspentWitnessRequest) returns (ListUnspentWitnessResponse) {}
 
-  // LockOutpoint marks an unspent transaction output as reserved.
+  // LockOutpoint marks an unspent transaction output as reserved excluding
+  // it from coin selection.
   rpc LockOutpoint(LockOutpointRequest) returns (LockOutpointResponse) {}
+
+  // UnlockOutpoint unmarks an unspent transaction output as reserved making
+  // it eligible for coin selection.
+  rpc UnlockOutpoint(UnlockOutpointRequest) returns (UnlockOutpointResponse) {}
 }
 
 message SignMessageRequest {
@@ -45,4 +50,11 @@ message LockOutpointRequest {
 }
 
 message LockOutpointResponse {}
+
+message UnlockOutpointRequest {
+  bytes hash = 1; // Hash of the output's transaction (txid)
+  uint32 index = 2; // Index of the output in the transaction
+}
+
+message UnlockOutpointResponse {}
 
