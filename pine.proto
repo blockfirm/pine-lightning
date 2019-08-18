@@ -14,6 +14,9 @@ service Pine {
 
   // NewAddress returns the next external or internal address for the wallet.
   rpc NewAddress(NewAddressRequest) returns (NewAddressResponse) {}
+
+  // FetchInputInfo returns information about a transaction output.
+  rpc FetchInputInfo(FetchInputInfoRequest) returns (FetchInputInfoResponse) {}
 }
 
 message SignMessageRequest {
@@ -67,5 +70,15 @@ message NewAddressRequest {
 }
 
 message NewAddressResponse {
-    string address = 1; // base58check encoded
+  string address = 1; // base58check encoded
+}
+
+message FetchInputInfoRequest {
+  bytes hash = 1; // Hash of the output's transaction (txid)
+  uint32 index = 2; // Index of the output in the transaction
+}
+
+message FetchInputInfoResponse {
+  int64 value = 1; // In satoshis
+  bytes pkScript = 2;
 }
