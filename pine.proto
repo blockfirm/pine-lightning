@@ -62,7 +62,7 @@ message UnlockOutpointRequest {
 message UnlockOutpointResponse {}
 
 message NewAddressRequest {
-  uint32 addressType = 1;
+  uint32 type = 1; // Address type of new address
   bool change = 2; // If true, an internal address is returned
 }
 
