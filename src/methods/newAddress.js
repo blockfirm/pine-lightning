@@ -29,7 +29,7 @@ const newAddress = ({ request }, callback) => {
     }
 
     callback(null, {
-      hash: bs58check.decode(response.address)
+      address: response.address
     });
   });
 };

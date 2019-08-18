@@ -67,5 +67,5 @@ message NewAddressRequest {
 }
 
 message NewAddressResponse {
-    bytes hash = 1; // A ripemd160 hash of the address
+    string address = 1; // base58check encoded
 }
