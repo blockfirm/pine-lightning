@@ -17,6 +17,9 @@ service Pine {
 
   // FetchInputInfo returns information about a transaction output.
   rpc FetchInputInfo(FetchInputInfoRequest) returns (FetchInputInfoResponse) {}
+
+  // SignOutputRaw signs a transaction.
+  rpc SignOutputRaw(SignOutputRawRequest) returns (SignOutputRawResponse) {}
 }
 
 message SignMessageRequest {
@@ -81,4 +84,61 @@ message FetchInputInfoRequest {
 message FetchInputInfoResponse {
   int64 value = 1; // In satoshis
   bytes pkScript = 2;
+}
+
+message SignOutputRawRequest {
+  Transaction transaction = 1;
+  SignDescriptor signDescriptor = 2;
+}
+
+message SignOutputRawResponse {
+  bytes signature = 1;
+}
+
+message Transaction {
+  int32 version = 1;
+  repeated TxIn ins = 2;
+  repeated TxOut outs = 3;
+  uint32 lockTime = 4;
+}
+
+message TxIn {
+  bytes transactionHash = 1;
+  uint32 index = 2;
+  bytes signatureScript = 3;
+  repeated bytes witness = 4;
+  uint32 sequence = 5;
+}
+
+message TxOut {
+  int64 value = 1;
+  bytes pkScript = 2;
+}
+
+message SignDescriptor {
+  KeyDescriptor keyDescriptor = 1;
+  bytes singleTweak = 2;
+  bytes doubleTweak = 3;
+  bytes witnessScript= 4;
+  TxOut output = 5;
+  uint32 hashType = 6;
+  TxSigHashes sigHashes = 7;
+  uint32 inputIndex = 8;
+}
+
+message KeyDescriptor {
+  KeyLocator keyLocator = 1;
+  bytes publicKey = 2;
+}
+
+message KeyLocator {
+  // BIP43 path: m/1017'/coinType'/keyFamily/0/index
+  uint32 keyFamily = 1;
+  uint32 index = 2;
+}
+
+message TxSigHashes {
+  bytes hashPrevOuts = 1;
+  bytes hashSequence = 2;
+  bytes hashOutputs = 3;
 }
