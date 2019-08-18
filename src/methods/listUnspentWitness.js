@@ -2,8 +2,8 @@ import btcwallet from '../btcwallet';
 import { lockedOutpoints } from './lockOutpoint';
 
 const ADDRESS_TYPE_UNKNOWN = 0;
-const ADDRESS_TYPE_WITNESS_PUBKEY = 1;
-const ADDRESS_TYPE_NESTED_WITNESS_PUBKEY = 2;
+const ADDRESS_TYPE_WITNESS_PUBKEY = 1; // BIP84 (p2wpkh)
+const ADDRESS_TYPE_NESTED_WITNESS_PUBKEY = 2; // BIP49 (p2sh-p2wpkh)
 
 const excludeLockedOutpoints = (utxos) => {
   return utxos.filter(utxo => {
