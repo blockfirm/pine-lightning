@@ -97,12 +97,12 @@ message SignOutputRawResponse {
 
 message Transaction {
   int32 version = 1;
-  repeated TxIn ins = 2;
-  repeated TxOut outs = 3;
+  repeated TransactionInput inputs = 2;
+  repeated TransactionOutput outputs = 3;
   uint32 lockTime = 4;
 }
 
-message TxIn {
+message TransactionInput {
   bytes transactionHash = 1;
   uint32 index = 2;
   bytes signatureScript = 3;
@@ -110,7 +110,7 @@ message TxIn {
   uint32 sequence = 5;
 }
 
-message TxOut {
+message TransactionOutput {
   int64 value = 1;
   bytes pkScript = 2;
 }
@@ -119,10 +119,10 @@ message SignDescriptor {
   KeyDescriptor keyDescriptor = 1;
   bytes singleTweak = 2;
   bytes doubleTweak = 3;
-  bytes witnessScript= 4;
-  TxOut output = 5;
+  bytes witnessScript = 4;
+  TransactionOutput output = 5;
   uint32 hashType = 6;
-  TxSigHashes sigHashes = 7;
+  TransactionSigHashes sigHashes = 7;
   uint32 inputIndex = 8;
 }
 
@@ -137,7 +137,7 @@ message KeyLocator {
   uint32 index = 2;
 }
 
-message TxSigHashes {
+message TransactionSigHashes {
   bytes hashPrevOuts = 1;
   bytes hashSequence = 2;
   bytes hashOutputs = 3;
