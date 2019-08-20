@@ -20,6 +20,8 @@ service Pine {
 
   // SignOutputRaw signs a transaction.
   rpc SignOutputRaw(SignOutputRawRequest) returns (SignOutputRawResponse) {}
+
+  rpc CompleteInputScript(CompleteInputScriptRequest) returns (CompleteInputScriptResponse) {}
 }
 
 message SignMessageRequest {
@@ -93,6 +95,16 @@ message SignOutputRawRequest {
 
 message SignOutputRawResponse {
   bytes signature = 1;
+}
+
+message CompleteInputScriptRequest {
+  Transaction transaction = 1;
+  SignDescriptor signDescriptor = 2;
+}
+
+message CompleteInputScriptResponse {
+  repeated bytes witness = 1;
+  bytes signatureScript = 2;
 }
 
 message Transaction {
