@@ -5,6 +5,7 @@ import unlockOutpoint from './unlockOutpoint';
 import newAddress from './newAddress';
 import fetchInputInfo from './fetchInputInfo';
 import signOutputRaw from './signOutputRaw';
+import computeInputScript from './computeInputScript';
 
 export default {
   signMessage,
@@ -13,6 +14,7 @@ export default {
   unlockOutpoint,
   newAddress,
   fetchInputInfo,
-  signOutputRaw
+  signOutputRaw,
+  computeInputScript
 };
 
