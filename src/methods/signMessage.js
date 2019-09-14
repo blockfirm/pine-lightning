@@ -3,7 +3,7 @@ import { getKeyPairFromMnemonic, signHash, hash256 } from '../crypto';
 import config from '../config';
 
 const findKeyByPublicKey = (publicKey) => {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 300; i++) {
     const keyPair = getKeyPairFromMnemonic(config.mnemonic, 0, i);
     const keyPairPublic = ecc.pointFromScalar(keyPair.privateKey, false);
 
