@@ -7,6 +7,7 @@ import fetchInputInfo from './fetchInputInfo';
 import signOutputRaw from './signOutputRaw';
 import computeInputScript from './computeInputScript';
 import getRevocationRootKey from './getRevocationRootKey';
+import deriveNextKey from './deriveNextKey';
 
 export default {
   signMessage,
@@ -17,6 +18,7 @@ export default {
   fetchInputInfo,
   signOutputRaw,
   computeInputScript,
-  getRevocationRootKey
+  getRevocationRootKey,
+  deriveNextKey
 };
 
