@@ -16,7 +16,7 @@ const getRevocationRootKey = ({ request }, callback) => {
   const { privateKey } = keyPair.privateKey;
 
   callback(null, { privateKey });
-  console.log('→ { privateKey: <${privateKey.length}> }\n');
+  console.log(`→ { privateKey: <${privateKey.length}> }\n`);
 };
 
 export default getRevocationRootKey;
