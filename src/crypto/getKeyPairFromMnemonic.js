@@ -16,7 +16,7 @@ const COIN_TYPE_TESTNET = 1;
 const getKeyPairFromMnemonic = (mnemonic, accountIndex = 0, addressIndex = 0) => {
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const masterNode = bip32.fromSeed(seed);
-  const path = `m/${PURPOSE_CODE_1017}'/${COIN_TYPE_TESTNET}'/${accountIndex}'/0/${addressIndex}`;
+  const path = `m/${PURPOSE_CODE_1017}'/${COIN_TYPE_TESTNET}'/${accountIndex}/0/${addressIndex}`;
   const keyPair = masterNode.derivePath(path);
 
   //keyPair.compressed = true;
