@@ -32,10 +32,13 @@ const fetchInputInfo = ({ request }, callback) => {
       });
 
       if (!utxo) {
+        console.log('→ ErrNotMine}');
         return callback(new Error('ErrNotMine'));
       }
 
-      callback(null, { pkScript: utxo.pk_script, value: Number(utxo.amount) });
+      const inputInfo = { pkScript: utxo.pk_script, value: Number(utxo.amount) };
+      callback(null, inputInfo);
+      console.log(`→ ${JSON.stringify(inputInfo)}\n`);
     });
   });
 };
