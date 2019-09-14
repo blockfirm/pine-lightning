@@ -26,6 +26,8 @@ service Pine {
   // GetRevocationRootKey returns a private key to be used as a revocation root.
   // TODO: Create an API for getting revocation secrets instead of exposing private keys.
   rpc GetRevocationRootKey(GetRevocationRootKeyRequest) returns (GetRevocationRootKeyResponse) {}
+
+  rpc DeriveNextKey(DeriveNextKeyRequest) returns (DeriveNextKeyResponse) {}
 }
 
 message SignMessageRequest {
@@ -167,3 +169,10 @@ message GetRevocationRootKeyResponse {
   bytes privateKey = 1;
 }
 
+message DeriveNextKeyRequest {
+  uint32 keyFamily = 1;
+}
+
+message DeriveNextKeyResponse {
+  KeyDescriptor keyDescriptor = 1;
+}
