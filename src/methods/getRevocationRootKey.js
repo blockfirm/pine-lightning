@@ -13,7 +13,7 @@ const getRevocationRootKey = ({ request }, callback) => {
     keyIndex
   );
 
-  const { privateKey } = keyPair.privateKey;
+  const privateKey = keyPair.privateKey;
 
   callback(null, { privateKey });
   console.log(`→ { privateKey: <${privateKey.length}> }\n`);
