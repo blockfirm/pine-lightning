@@ -22,6 +22,10 @@ service Pine {
   rpc SignOutputRaw(SignOutputRawRequest) returns (SignOutputRawResponse) {}
 
   rpc ComputeInputScript(ComputeInputScriptRequest) returns (ComputeInputScriptResponse) {}
+
+  // GetRevocationRootKey returns a private key to be used as a revocation root.
+  // TODO: Create an API for getting revocation secrets instead of exposing private keys.
+  rpc GetRevocationRootKey(GetRevocationRootKeyRequest) returns (GetRevocationRootKeyResponse) {}
 }
 
 message SignMessageRequest {
@@ -154,3 +158,12 @@ message TransactionSigHashes {
   bytes hashSequence = 2;
   bytes hashOutputs = 3;
 }
+
+message GetRevocationRootKeyRequest {
+
+}
+
+message GetRevocationRootKeyResponse {
+  bytes privateKey = 1;
+}
+
