@@ -6,6 +6,7 @@ import newAddress from './newAddress';
 import fetchInputInfo from './fetchInputInfo';
 import signOutputRaw from './signOutputRaw';
 import computeInputScript from './computeInputScript';
+import getRevocationRootKey from './getRevocationRootKey';
 
 export default {
   signMessage,
@@ -15,6 +16,7 @@ export default {
   newAddress,
   fetchInputInfo,
   signOutputRaw,
-  computeInputScript
+  computeInputScript,
+  getRevocationRootKey
 };
 
