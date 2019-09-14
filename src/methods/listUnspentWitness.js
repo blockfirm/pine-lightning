@@ -48,7 +48,9 @@ const listUnspentWitness = ({ request }, callback) => {
         vout: output.output_index
       }));
 
-      callback(null, { utxos: excludeLockedOutpoints(utxos) });
+      const unspentWitness = { utxos: excludeLockedOutpoints(utxos) };
+      callback(null, unspentWitness);
+      console.log(`→ ${utxos.length}\n`);
     });
   });
 };

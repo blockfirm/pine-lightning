@@ -9,6 +9,7 @@ const unlockOutpoint = ({ request }, callback) => {
   lockedOutpoints[txid][index] = false;
 
   callback(null, {});
+  console.log('→ {}\n');
 };
 
 export default unlockOutpoint;

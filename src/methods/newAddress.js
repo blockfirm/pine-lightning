@@ -20,6 +20,7 @@ const newAddress = ({ request }, callback) => {
   };
 
   if (type !== ADDRESS_TYPE_WITNESS_PUBKEY && type !== ADDRESS_TYPE_NESTED_WITNESS_PUBKEY) {
+    console.log('→ ErrAddressNotSupported\n');
     return callback(new Error('address type not supported'));
   }
 
@@ -31,6 +32,8 @@ const newAddress = ({ request }, callback) => {
     callback(null, {
       address: response.address
     });
+
+    console.log(`→ ${response.address}\n`);
   });
 };
 
