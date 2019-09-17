@@ -1,7 +1,9 @@
-import bitcoin from 'bitcoinjs-lib';
+import * as bitcoin from 'bitcoinjs-lib';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
+
 import config from '../config';
+import btcd from '../btcd';
 
 const HASH_TYPE_OLD = 0;
 const HASH_TYPE_ALL = 1;
@@ -34,7 +36,7 @@ const getKeyPairByIndex = (addressIndex) => {
 const getOutputScript = (publicKey) => {
   const p2pkh = bitcoin.payments.p2pkh({
     pubkey: publicKey,
-    network: bitcoin.networks.testnet
+    network: bitcoin.networks.regtest
   });
 
   return p2pkh.output;
@@ -51,31 +53,45 @@ const findKeyByOutputScript = (outputScript) => {
   }
 };
 
-const createTransactionBuilder = (transaction, signDescriptor) => {
-  const transactionBuilder = new bitcoin.TransactionBuilder(
-    bitcoin.networks.testnet
-  );
+const fetchInputTransactions = (inputs) => {
+  const promises = inputs.map(input => {
+    const txid = input.transactionHash.hexSlice().match(/../g).reverse().join('');
 
-  transactionBuilder.setVersion(transaction.version);
-  transactionBuilder.setLockTime(transaction.lockTime);
+    return btcd.getRawTransaction(txid).then(transaction => {
+      input.transaction = transaction;
+    });
+  });
+
+  return Promise.all(promises).then(() => inputs);
+};
+
+const createTransactionBuilder = (transaction) => {
+  const psbt = new bitcoin.Psbt({
+    network: bitcoin.networks.regtest
+  });
+
+  psbt.setVersion(transaction.version);
+  psbt.setLocktime(transaction.lockTime);
 
   transaction.outputs.forEach(output => {
-    transactionBuilder.addOutput(
-      output.pkScript,
-      Number(output.value)
-    );
+    psbt.addOutput({
+      script: output.pkScript,
+      value: Number(output.value)
+    });
   });
 
-  transaction.inputs.forEach(input => {
-    transactionBuilder.addInput(
-      input.transactionHash,
-      input.index,
-      input.sequence,
-      signDescriptor.output.pkScript
-    );
-  });
+  return fetchInputTransactions(transaction.inputs).then(inputs => {
+    inputs.forEach(input => {
+      psbt.addInput({
+        hash: input.transactionHash,
+        index: input.index,
+        sequence: input.sequence,
+        nonWitnessUtxo: Buffer.from(input.transaction.hex, 'hex')
+      });
+    });
 
-  return transactionBuilder;
+    return psbt;
+  });
 };
 
 const computeInputScript = ({ request }, callback) => {
@@ -83,26 +99,35 @@ const computeInputScript = ({ request }, callback) => {
   console.log(`computeInputScript(${JSON.stringify(transaction)}, ${JSON.stringify(signDescriptor)})`);
 
   const keyPair = findKeyByOutputScript(signDescriptor.output.pkScript);
-  const transactionBuilder = createTransactionBuilder(transaction, signDescriptor);
 
-  transactionBuilder.sign(
-    signDescriptor.inputIndex,
-    keyPair,
-    null,
-    SIGHASH_MAP[signDescriptor.hashType]
-  );
+  if (!keyPair) {
+    throw new Error('Could not locate key');
+  }
 
-  const builtTransaction = transactionBuilder.build();
+  createTransactionBuilder(transaction)
+    .then(psbt => {
+      psbt.signInput(
+        signDescriptor.inputIndex,
+        keyPair,
+        [SIGHASH_MAP[signDescriptor.hashType]]
+      );
 
-  const response = {
-    signatureScript: builtTransaction.ins[0].script
-  };
+      psbt.validateSignaturesOfInput(signDescriptor.inputIndex);
+      psbt.finalizeAllInputs();
 
-  //console.log(JSON.stringify(builtTransaction.ins));
-  //console.log('keypair: ', keyPair);
+      const builtTransaction = psbt.extractTransaction();
 
-  callback(null, response);
-  console.log(`→ ${response}\n`);
+      const response = {
+        signatureScript: builtTransaction.ins[0].script
+      };
+
+      callback(null, response);
+      console.log(`→ ${JSON.stringify(response)}\n`);
+    })
+    .catch(error => {
+      callback(error);
+      console.log(`→ ERROR: ${error.message}\n`);
+    });
 };
 
 export default computeInputScript;
