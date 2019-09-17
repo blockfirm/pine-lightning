@@ -4,7 +4,7 @@ import config from '../config';
 const deriveNextKey = ({ request }, callback) => {
   console.log(`deriveNextKey(${request.keyFamily})`);
   const { keyFamily } = request; // TODO: Only allow certain key families.
-  const keyIndex = 0; // TODO: Should increment so that a new key is always returned.
+  const keyIndex = 1; // TODO: Should increment so that a new key is always returned.
 
   const keyPair = getKeyPairFromMnemonic(
     config.mnemonic,
