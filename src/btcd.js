@@ -1,3 +1,4 @@
+import fs from 'fs';
 import WebSocket from 'ws';
 import config from './config';
 
@@ -12,7 +13,8 @@ export class BtcdClient {
   }
 
   _connect() {
-    const { username, password, uri } = this.config;
+    const { username, password, uri, certPath } = this.config;
+    const cert = fs.readFileSync(certPath);
 
     this._disconnect();
 
@@ -20,7 +22,9 @@ export class BtcdClient {
       headers: {
         // eslint-disable-next-line prefer-template
         Authorization: 'Basic ' + new Buffer(`${username}:${password}`).toString('base64')
-      }
+      },
+      ca: [cert],
+      cert
     });
 
     this.callCounter = 0;

@@ -4,9 +4,10 @@ const config = {
     port: 8910
   },
   btcd: {
-    uri: 'ws://127.0.0.1:18334/ws',
+    uri: 'wss://127.0.0.1:18334/ws',
     username: '',
-    password: ''
+    password: '',
+    certPath: '~/.btcd/rpc.cert'
   },
   mnemonic: 'test test test test test test test test test test test test'
 };
