@@ -92,17 +92,7 @@ export class BtcdClient {
       verbose
     ];
 
-    return this.call('getrawtransaction', params)
-      .then((transaction) => {
-        /**
-         * The getrawtransaction API doesn't return a time for
-         * unconfirmed transactions. Ideally, it would be the time
-         * at which it was received by the node. This workaound
-         * sets it to the current time instead.
-         */
-        transaction.time = transaction.time || (new Date().getTime() / 1000);
-        return transaction;
-      });
+    return this.call('getrawtransaction', params);
   }
 
   _onOpen() {
