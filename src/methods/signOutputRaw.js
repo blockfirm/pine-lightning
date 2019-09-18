@@ -1,7 +1,10 @@
-import bitcoin from 'bitcoinjs-lib';
+/* eslint-disable max-lines */
+import * as bitcoin from 'bitcoinjs-lib';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
+
 import config from '../config';
+import btcd from '../btcd';
 
 const HASH_TYPE_OLD = 0;
 const HASH_TYPE_ALL = 1;
@@ -17,74 +20,45 @@ const SIGHASH_MAP = {
   [HASH_TYPE_ANY_ONE_CAN_PAY]: bitcoin.Transaction.SIGHASH_ANYONECANPAY
 };
 
-const getOutputScript = (publicKey) => {
-  const p2pkh = bitcoin.payments.p2pkh({
-    pubkey: publicKey,
-    network: bitcoin.networks.testnet
+const fetchInputTransactions = (inputs) => {
+  const promises = inputs.map(input => {
+    const txid = input.transactionHash.hexSlice().match(/../g).reverse().join('');
+
+    return btcd.getRawTransaction(txid).then(transaction => {
+      input.transaction = transaction;
+    });
   });
 
-  return p2pkh.output;
+  return Promise.all(promises).then(() => inputs);
 };
 
-const createTransactionBuilder = (transaction, publicKey) => {
-  const transactionBuilder = new bitcoin.TransactionBuilder(
-    bitcoin.networks.testnet
-  );
+const createTransactionBuilder = (transaction) => {
+  const psbt = new bitcoin.Psbt({
+    network: bitcoin.networks.regtest
+  });
 
-  transactionBuilder.setVersion(transaction.version);
-  transactionBuilder.setLockTime(transaction.lockTime);
+  psbt.setVersion(transaction.version);
+  psbt.setLocktime(transaction.lockTime);
 
   transaction.outputs.forEach(output => {
-    transactionBuilder.addOutput(
-      output.pkScript,
-      Number(output.value)
-    );
+    psbt.addOutput({
+      script: output.pkScript,
+      value: Number(output.value)
+    });
   });
 
-  transaction.inputs.forEach(input => {
-    transactionBuilder.addInput(
-      input.transactionHash,
-      input.index,
-      input.sequence,
-      getOutputScript(publicKey)
-    );
-
-    /*transactionBuilder.__addInputUnsafe(
-      input.transactionHash,
-      input.index, {
+  return fetchInputTransactions(transaction.inputs).then(inputs => {
+    inputs.forEach(input => {
+      psbt.addInput({
+        hash: input.transactionHash,
+        index: input.index,
         sequence: input.sequence,
-        script: input.signatureScript,
-        witness: input.witness
-      }
-    );*/
+        nonWitnessUtxo: Buffer.from(input.transaction.hex, 'hex')
+      });
+    });
+
+    return psbt;
   });
-
-  return transactionBuilder;
-};
-
-const getKeyPairByIndex = (addressIndex) => {
-  const seed = bip39.mnemonicToSeedSync(config.mnemonic);
-  const masterNode = bip32.fromSeed(seed, bitcoin.networks.testnet);
-
-  const purpose = 44;
-  const coinType = 0; // Mainnet
-  const accountIndex = 0;
-  const change = 0; // External
-  const path = `m/${purpose}'/${coinType}'/${accountIndex}'/${change}/${addressIndex}`; // NOTE: Unharden account?
-  const node = masterNode.derivePath(path);
-
-  return node;
-};
-
-const findKeyByOutputScript = (outputScript) => {
-  for (let index = 0; index < 300; index++) {
-    const keyPair = getKeyPairByIndex(index);
-    const output = getOutputScript(keyPair.publicKey);
-
-    if (output.equals(outputScript)) {
-      return keyPair;
-    }
-  }
 };
 
 const findKeyPairByKeyLocator = (keyLocator) => {
@@ -139,28 +113,40 @@ const signOutputRaw = ({ request }, callback) => {
   console.log(`signOutputRaw(${JSON.stringify(transaction)}, ${JSON.stringify(signDescriptor)})`);
 
   const keyPair = findKeyPair(signDescriptor.keyDescriptor);
-  //const keyPair = findKeyByOutputScript(signDescriptor.output.pkScript);
-  const tweakedKeyPair = getTweakedKeyPair(keyPair, signDescriptor);
-  const transactionBuilder = createTransactionBuilder(transaction, tweakedKeyPair.publicKey);
 
-  transactionBuilder.sign(
-    signDescriptor.inputIndex,
-    tweakedKeyPair,
-    null,
-    SIGHASH_MAP[signDescriptor.hashType]
-  );
-
-  const inputSignature = transactionBuilder.__inputs[signDescriptor.inputIndex].signatures[0];
+  if (!keyPair) {
+    return callback(new Error('Could not locate key'));
+  }
 
   const pubkey = bitcoin.ECPair.fromPublicKey(signDescriptor.keyDescriptor.publicKey);
   console.log(pubkey.publicKey.toString('hex'));
   console.log(keyPair.publicKey.toString('hex'));
 
-  // Chop off the sighash flag at the end of the signature.
-  const signature = inputSignature.slice(0, inputSignature.length - 1);
+  const tweakedKeyPair = getTweakedKeyPair(keyPair, signDescriptor);
 
-  callback(null, { signature });
-  console.log(`→ ${JSON.stringify(signature)}\n`);
+  createTransactionBuilder(transaction)
+    .then(psbt => {
+      psbt.signInput(
+        signDescriptor.inputIndex,
+        tweakedKeyPair,
+        [SIGHASH_MAP[signDescriptor.hashType]]
+      );
+
+      psbt.validateSignaturesOfInput(signDescriptor.inputIndex);
+      psbt.finalizeAllInputs();
+
+      const inputSignature = psbt.data.inputs[signDescriptor.inputIndex].partialSig[0];
+
+      // Chop off the sighash flag at the end of the signature.
+      const signature = inputSignature.slice(0, inputSignature.length - 1);
+
+      callback(null, { signature });
+      console.log(`→ ${JSON.stringify(signature)}\n`);
+    })
+    .catch(error => {
+      callback(error);
+      console.log(`→ ERROR: ${error.message}\n`);
+    });
 };
 
 export default signOutputRaw;
