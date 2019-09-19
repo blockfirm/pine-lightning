@@ -63,6 +63,10 @@ describe('methods/computeInputScript.js', () => {
       ]);
 
       computeInputScript({ request }, (error, response) => {
+        if (error) {
+          return done(error);
+        }
+
         assert(response.signatureScript.equals(expectedSignatureScript));
         done();
       });

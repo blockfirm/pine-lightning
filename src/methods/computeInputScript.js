@@ -101,7 +101,7 @@ const computeInputScript = ({ request }, callback) => {
   const keyPair = findKeyByOutputScript(signDescriptor.output.pkScript);
 
   if (!keyPair) {
-    throw new Error('Could not locate key');
+    return callback(new Error('Could not locate key'));
   }
 
   createTransactionBuilder(transaction)
