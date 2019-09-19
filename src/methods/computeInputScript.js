@@ -12,7 +12,7 @@ const HASH_TYPE_SINGLE = 3;
 const HASH_TYPE_ANY_ONE_CAN_PAY = 4;
 
 const SIGHASH_MAP = {
-  [HASH_TYPE_OLD]: bitcoin.Transaction.SIGHASH_ALL, // TODO: Find correct sighash.
+  [HASH_TYPE_OLD]: 0x00,
   [HASH_TYPE_ALL]: bitcoin.Transaction.SIGHASH_ALL,
   [HASH_TYPE_NONE]: bitcoin.Transaction.SIGHASH_NONE,
   [HASH_TYPE_SINGLE]: bitcoin.Transaction.SIGHASH_SINGLE,
