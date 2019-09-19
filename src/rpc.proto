@@ -1,7 +1,15 @@
 syntax = "proto3";
 
+// The following RPC methods implements methods found in lnd so that
+// lnd doesn't need to hold any private keys and can instead use this
+// gRPC service to sign transactions and get wallet information.
+
 service Pine {
+  // SignMessage signs a message using the user's private key.
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
+
+  // ListUnspentWitness returns a list of unspent transaction outputs from
+  // the user's wallet.
   rpc ListUnspentWitness(ListUnspentWitnessRequest) returns (ListUnspentWitnessResponse) {}
 
   // LockOutpoint marks an unspent transaction output as reserved excluding
@@ -21,12 +29,14 @@ service Pine {
   // SignOutputRaw signs a transaction.
   rpc SignOutputRaw(SignOutputRawRequest) returns (SignOutputRawResponse) {}
 
+  // ComputeInputScript computes an input script for a transaction.
   rpc ComputeInputScript(ComputeInputScriptRequest) returns (ComputeInputScriptResponse) {}
 
   // GetRevocationRootKey returns a private key to be used as a revocation root.
   // TODO: Create an API for getting revocation secrets instead of exposing private keys.
   rpc GetRevocationRootKey(GetRevocationRootKeyRequest) returns (GetRevocationRootKeyResponse) {}
 
+  // DeriveNextKey returns a key descriptor for the next key for the specified key family.
   rpc DeriveNextKey(DeriveNextKeyRequest) returns (DeriveNextKeyResponse) {}
 }
 
@@ -57,19 +67,19 @@ message Utxo {
   int64 value = 2; // In satoshis
   int64 confirmations = 3;
   bytes pkScript = 4;
-  bytes transactionHash = 5; // txid
+  bytes transactionHash = 5;
   uint32 vout = 6; // Index of the output in the transaction
 }
 
 message LockOutpointRequest {
-  bytes hash = 1; // Hash of the output's transaction (txid)
+  bytes hash = 1; // Hash of the output's transaction
   uint32 index = 2; // Index of the output in the transaction
 }
 
 message LockOutpointResponse {}
 
 message UnlockOutpointRequest {
-  bytes hash = 1; // Hash of the output's transaction (txid)
+  bytes hash = 1; // Hash of the output's transaction
   uint32 index = 2; // Index of the output in the transaction
 }
 
@@ -85,7 +95,7 @@ message NewAddressResponse {
 }
 
 message FetchInputInfoRequest {
-  bytes hash = 1; // Hash of the output's transaction (txid)
+  bytes hash = 1; // Hash of the output's transaction
   uint32 index = 2; // Index of the output in the transaction
 }
 
@@ -100,6 +110,7 @@ message SignOutputRawRequest {
 }
 
 message SignOutputRawResponse {
+  // Witness signature without the hash type flag.
   bytes signature = 1;
 }
 
@@ -129,7 +140,7 @@ message TransactionInput {
 }
 
 message TransactionOutput {
-  int64 value = 1;
+  int64 value = 1; // In satoshis
   bytes pkScript = 2;
 }
 
@@ -139,14 +150,14 @@ message SignDescriptor {
   bytes doubleTweak = 3;
   bytes witnessScript = 4;
   TransactionOutput output = 5;
-  uint32 hashType = 6;
+  uint32 hashType = 6; // Enum, see src/methods/signOutputRaw.js for mapping
   TransactionSigHashes sigHashes = 7;
   uint32 inputIndex = 8;
 }
 
 message KeyDescriptor {
   KeyLocator keyLocator = 1;
-  bytes publicKey = 2;
+  bytes publicKey = 2; // 65 bytes uncompressed
 }
 
 message KeyLocator {
@@ -161,9 +172,7 @@ message TransactionSigHashes {
   bytes hashOutputs = 3;
 }
 
-message GetRevocationRootKeyRequest {
-
-}
+message GetRevocationRootKeyRequest {}
 
 message GetRevocationRootKeyResponse {
   bytes privateKey = 1;
