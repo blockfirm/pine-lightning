@@ -1,10 +1,11 @@
 import grpc from 'grpc';
 import * as protoLoader from '@grpc/proto-loader';
+import config from './config';
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA';
 
-const RPC_HOST = 'localhost:18554';
-const RPC_PROTO = '/home/timothy/go/src/github.com/btcsuite/btcwallet/rpc/api.proto';
+const RPC_HOST = config.btcwallet.host;
+const RPC_PROTO = config.btcwallet.protoPath;
 
 const packageDefinition = protoLoader.loadSync(
   RPC_PROTO, {
