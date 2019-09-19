@@ -1,5 +1,11 @@
+import proxyquire from 'proxyquire';
 import assert from 'assert';
-import signOutputRaw from '../../src/methods/signOutputRaw';
+
+import configMock from '../mocks/config';
+
+const signOutputRaw = proxyquire('../../../src/methods/signOutputRaw', {
+  '../config': { ...configMock, '@noCallThru': true },
+}).default;
 
 const transaction = {
   inputs: [

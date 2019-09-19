@@ -1,5 +1,13 @@
+import proxyquire from 'proxyquire';
 import assert from 'assert';
-import computeInputScript from '../../src/methods/computeInputScript';
+
+import configMock from '../mocks/config';
+import btcdMock from '../mocks/btcd';
+
+const computeInputScript = proxyquire('../../../src/methods/computeInputScript', {
+  '../config': { ...configMock, '@noCallThru': true },
+  '../btcd': { default: btcdMock }
+}).default;
 
 const transaction = {
   inputs: [
@@ -13,11 +21,11 @@ const transaction = {
   ],
   outputs: [
     {
-      value: "100000",
+      value: '100000',
       pkScript: Buffer.from([0,32,69,51,230,188,97,162,155,87,136,7,185,11,195,131,22,57,227,101,148,29,133,251,196,33,120,163,244,19,241,158,181,68])
     },
     {
-      value: "4999891213",
+      value: '4999891213',
       pkScript: Buffer.from([0,20,31,109,227,130,130,196,203,80,1,104,17,82,63,31,46,50,91,6,24,150])
     }
   ],
@@ -37,7 +45,7 @@ const signDescriptor = {
   doubleTweak: Buffer.from([]),
   witnessScript: Buffer.from([]),
   output: {
-    value: "5000000000",
+    value: '5000000000',
     pkScript: Buffer.from([118,169,20,94,31,249,139,234,246,1,217,115,235,149,15,118,7,38,93,58,226,47,209,136,172])
   },
   hashType: 1,
