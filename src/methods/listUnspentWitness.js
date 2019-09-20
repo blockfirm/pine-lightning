@@ -42,7 +42,7 @@ const listUnspentWitness = ({ request }, callback) => {
       const utxos = response.selected_outputs.map((output) => ({
         addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
         value: Number(output.amount),
-        confirmations: minConfirmations,
+        confirmations: 100,
         pkScript: output.pk_script,
         transactionHash: output.transaction_hash,
         vout: output.output_index
