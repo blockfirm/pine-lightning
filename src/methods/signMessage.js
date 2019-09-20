@@ -1,5 +1,6 @@
+import * as bitcoin from 'bitcoinjs-lib';
 import ecc from 'tiny-secp256k1';
-import { getKeyPairFromMnemonic, signHash, hash256 } from '../crypto';
+import { getKeyPairFromMnemonic } from '../crypto';
 import config from '../config';
 
 const findKeyByPublicKey = (publicKey) => {
@@ -26,10 +27,15 @@ const signMessage = ({ request }, callback) => {
     return callback(error, null);
   }
 
-  const hash = hash256(message);
-  const signature = signHash(hash, keyPair);
+  const hash = bitcoin.crypto.hash256(message);
+  const signature = keyPair.sign(hash);
+  const derSignature = bitcoin.script.signature.encode(signature, 0x01);
 
-  callback(null, { signature });
+  // Chop off the sighash flag at the end of the signature.
+  const finalSignature = derSignature.slice(0, derSignature.length - 1);
+
+  callback(null, { signature: finalSignature });
+  console.log(`→ ${JSON.stringify(finalSignature)}\n`);
 };
 
 export default signMessage;
