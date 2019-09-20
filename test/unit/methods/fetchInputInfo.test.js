@@ -17,10 +17,17 @@ describe('methods/fetchInputInfo.js', () => {
         index: 0
       };
 
-      const expectedInputInfo = {
-        // From the btcwallet mock.
-        pkScript: Buffer.from('14836dbe7f38c5ac3d49e8d790af808a4ee9edcf', 'hex'),
-        value: 25000000
+      const expectedResponse = {
+        utxo: {
+          addressType: 2,
+          confirmations: 6,
+
+          // From the btcwallet mock.
+          transactionHash: Buffer.from('3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a', 'hex'),
+          pkScript: Buffer.from('14836dbe7f38c5ac3d49e8d790af808a4ee9edcf', 'hex'),
+          value: 25000000,
+          vout: 0
+        }
       };
 
       fetchInputInfo({ request }, (error, response) => {
@@ -28,7 +35,7 @@ describe('methods/fetchInputInfo.js', () => {
           return done(error);
         }
 
-        expect(response).to.deep.equal(expectedInputInfo);
+        expect(response).to.deep.equal(expectedResponse);
         done();
       });
     });

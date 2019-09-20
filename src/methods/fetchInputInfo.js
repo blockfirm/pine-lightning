@@ -1,5 +1,9 @@
 import btcwallet from '../btcwallet';
 
+const ADDRESS_TYPE_UNKNOWN = 0;
+const ADDRESS_TYPE_WITNESS_PUBKEY = 1; // BIP84 (p2wpkh)
+const ADDRESS_TYPE_NESTED_WITNESS_PUBKEY = 2; // BIP49 (p2sh-p2wpkh)
+
 const fetchInputInfo = ({ request }, callback) => {
   const { hash, index } = request;
   console.log(`fetchInputInfo(${hash.toString('hex')}, ${index})`);
@@ -27,19 +31,27 @@ const fetchInputInfo = ({ request }, callback) => {
         return callback(error);
       }
 
-      const utxo = response.selected_outputs.find((output) => {
-        return output.transaction_hash.equals(hash) && output.output_index === index;
-      });
+      const output = response.selected_outputs.find(selectedOutput => (
+        selectedOutput.transaction_hash.equals(hash) && selectedOutput.output_index === index
+      ));
 
-      if (!utxo) {
+      if (!output) {
         // TODO: Handle this error correctly in the client.
         console.log('→ ErrNotMine}');
         return callback(new Error('ErrNotMine'));
       }
 
-      const inputInfo = { pkScript: utxo.pk_script, value: Number(utxo.amount) };
-      callback(null, inputInfo);
-      console.log(`→ ${JSON.stringify(inputInfo)}\n`);
+      const utxo = {
+        addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
+        value: Number(output.amount),
+        confirmations: 6,
+        pkScript: output.pk_script,
+        transactionHash: output.transaction_hash,
+        vout: output.output_index
+      };
+
+      callback(null, { utxo });
+      console.log(`→ ${JSON.stringify(utxo)}\n`);
     });
   });
 };

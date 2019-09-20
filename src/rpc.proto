@@ -100,8 +100,7 @@ message FetchInputInfoRequest {
 }
 
 message FetchInputInfoResponse {
-  int64 value = 1; // In satoshis
-  bytes pkScript = 2;
+  Utxo utxo = 1;
 }
 
 message SignOutputRawRequest {
