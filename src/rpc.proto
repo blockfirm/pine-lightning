@@ -38,6 +38,10 @@ service Pine {
 
   // DeriveNextKey returns a key descriptor for the next key for the specified key family.
   rpc DeriveNextKey(DeriveNextKeyRequest) returns (DeriveNextKeyResponse) {}
+
+  // DeriveKey returns a key descriptor for a private key specified by
+  // the passed key locator.
+  rpc DeriveKey(DeriveKeyRequest) returns (DeriveKeyResponse) {}
 }
 
 message SignMessageRequest {
@@ -182,5 +186,13 @@ message DeriveNextKeyRequest {
 }
 
 message DeriveNextKeyResponse {
+  KeyDescriptor keyDescriptor = 1;
+}
+
+message DeriveKeyRequest {
+  KeyLocator keyLocator = 1;
+}
+
+message DeriveKeyResponse {
   KeyDescriptor keyDescriptor = 1;
 }
