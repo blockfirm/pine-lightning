@@ -11,7 +11,7 @@ const fetchInputInfo = proxyquire('../../../src/methods/fetchInputInfo', {
 
 describe('methods/fetchInputInfo.js', () => {
   describe('fetchInputInfo()', () => {
-    it('returns ', (done) => {
+    it('returns input info', (done) => {
       const request = {
         hash: Buffer.from('3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a', 'hex'), // From the btcwallet mock.
         index: 0
