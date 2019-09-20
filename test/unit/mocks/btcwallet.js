@@ -15,6 +15,11 @@ const wallet = {
         }
       ]
     });
+  },
+  nextAddress: (_, callback) => {
+    callback(null, {
+      address: '15KDN6U7TkGub1pYEMKewMgXGQzoQSdHyQ'
+    });
   }
 };
 
