@@ -32,6 +32,7 @@ const fetchInputInfo = ({ request }, callback) => {
       });
 
       if (!utxo) {
+        // TODO: Handle this error correctly in the client.
         console.log('→ ErrNotMine}');
         return callback(new Error('ErrNotMine'));
       }
