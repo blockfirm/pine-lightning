@@ -3,7 +3,7 @@ import config from '../config';
 
 const KEY_FAMILY_REVOCATION_ROOT = 5;
 
-const getRevocationRootKey = ({ request }, callback) => {
+const getRevocationRootKey = (_, callback) => {
   console.log(`getRevocationRootKey()`);
   const keyIndex = 0; // TODO: Should increment so that a new key is always returned.
 
