@@ -2,6 +2,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
 
+import { tweakKeyPair } from '../crypto';
 import config from '../config';
 import btcd from '../btcd';
 
@@ -104,11 +105,13 @@ const computeInputScript = ({ request }, callback) => {
     return callback(new Error('Could not locate key'));
   }
 
+  const tweakedKeyPair = tweakKeyPair(keyPair, signDescriptor);
+
   createTransactionBuilder(transaction)
     .then(psbt => {
       psbt.signInput(
         signDescriptor.inputIndex,
-        keyPair,
+        tweakedKeyPair,
         [SIGHASH_MAP[signDescriptor.hashType]]
       );
 

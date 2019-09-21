@@ -2,7 +2,9 @@
 import * as bitcoin from 'bitcoinjs-lib';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
+
 import config from '../config';
+import { tweakKeyPair } from '../crypto';
 
 const MAX_UINT16 = 65535;
 const MAX_UINT32 = 4294967295;
@@ -52,22 +54,6 @@ const findKeyPair = (keyDescriptor) => {
   if (publicKey && publicKey.length) {
     return findKeyPairByPublicKey(publicKey);
   }
-};
-
-const getTweakedKeyPair = (keyPair, signDescriptor) => {
-  const { singleTweak, doubleTweak } = signDescriptor;
-
-  if (doubleTweak && doubleTweak.length) {
-    // TODO
-    throw new Error('DoubleTweak is not implemented');
-  }
-
-  if (singleTweak && singleTweak.length) {
-    // TODO
-    throw new Error('SingleTweak is not implemented');
-  }
-
-  return keyPair;
 };
 
 const isWitnessPubKeyHash = (script) => {
@@ -235,7 +221,7 @@ const signOutputRaw = ({ request }, callback) => {
     return callback(new Error('Located key does not match public key'));
   }
 
-  const tweakedKeyPair = getTweakedKeyPair(keyPair, signDescriptor);
+  const tweakedKeyPair = tweakKeyPair(keyPair, signDescriptor);
 
   const witnessSignature = rawTxInWitnessSignature({
     transaction,
