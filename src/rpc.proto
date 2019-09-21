@@ -23,6 +23,10 @@ service Pine {
   // NewAddress returns the next external or internal address for the wallet.
   rpc NewAddress(NewAddressRequest) returns (NewAddressResponse) {}
 
+  // IsOurAddress returns whether or not the passed address belongs to the
+  // user's wallet.
+  rpc IsOurAddress(IsOurAddressRequest) returns (IsOurAddressResponse) {}
+
   // FetchInputInfo returns information about a transaction output.
   rpc FetchInputInfo(FetchInputInfoRequest) returns (FetchInputInfoResponse) {}
 
@@ -96,6 +100,14 @@ message NewAddressRequest {
 
 message NewAddressResponse {
   string address = 1; // base58check encoded
+}
+
+message IsOurAddressRequest {
+  string address = 1;
+}
+
+message IsOurAddressResponse {
+  bool isOurAddress = 1;
 }
 
 message FetchInputInfoRequest {
