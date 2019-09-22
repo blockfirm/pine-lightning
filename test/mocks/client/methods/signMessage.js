@@ -9,13 +9,12 @@ const findKeyByPublicKey = (publicKey) => {
     const keyPairPublic = ecc.pointFromScalar(keyPair.privateKey, false);
 
     if (keyPairPublic.equals(publicKey)) {
-      console.log(`signMessage: Found key at index: ${i}`);
       return keyPair;
     }
   }
 };
 
-const signMessage = ({ request }, callback) => {
+const signMessage = (request) => {
   console.log(`signMessage(${request.publicKey.toString('hex')})`);
 
   const { publicKey, message } = request;
@@ -24,7 +23,7 @@ const signMessage = ({ request }, callback) => {
   if (!keyPair) {
     const error = new Error('No private key found for specified public key.');
     console.log(error.message);
-    return callback(error, null);
+    return Promise.reject(error);
   }
 
   const hash = bitcoin.crypto.hash256(message);
@@ -34,8 +33,8 @@ const signMessage = ({ request }, callback) => {
   // Chop off the sighash flag at the end of the signature.
   const finalSignature = derSignature.slice(0, derSignature.length - 1);
 
-  callback(null, { signature: finalSignature });
   console.log(`→ ${JSON.stringify(finalSignature)}\n`);
+  return Promise.resolve({ signature: finalSignature });
 };
 
 export default signMessage;

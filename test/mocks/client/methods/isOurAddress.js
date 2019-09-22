@@ -37,14 +37,14 @@ const findKeyByAddress = (address) => {
   }
 };
 
-const isOurAddress = ({ request }, callback) => {
+const isOurAddress = (request) => {
   console.log(`isOurAddress(${request.address})`);
   const { address } = request;
   const keyPair = findKeyByAddress(address);
   const result = Boolean(keyPair);
 
-  callback(null, { isOurAddress: result });
   console.log(`→ ${result}\n`);
+  return Promise.resolve({ isOurAddress: result });
 };
 
 export default isOurAddress;

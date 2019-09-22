@@ -1,19 +1,16 @@
 const config = {
-  rpc: {
-    proto: 'rpc.proto',
-    port: 8910
-  },
-  btcd: {
-    uri: 'wss://127.0.0.1:18334/ws',
-    username: '',
-    password: '',
-    certPath: '~/.btcd/rpc.cert'
-  },
-  btcwallet: {
-    host: '127.0.0.1:18554',
-    protoPath: '~/go/src/github.com/btcsuite/btcwallet/rpc/api.proto'
-  },
-  mnemonic: 'test test test test test test test test test test test test'
+  servers: {
+    client: {
+      proto: 'protos/client.proto',
+      host: '0.0.0.0',
+      port: 8911
+    },
+    node: {
+      proto: 'protos/node.proto',
+      host: '0.0.0.0',
+      port: 8910
+    }
+  }
 };
 
 export default config;

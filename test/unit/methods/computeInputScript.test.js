@@ -4,7 +4,7 @@ import assert from 'assert';
 import configMock from '../mocks/config';
 import btcdMock from '../mocks/btcd';
 
-const computeInputScript = proxyquire('../../../src/methods/computeInputScript', {
+const computeInputScript = proxyquire('../../mocks/client/methods/computeInputScript', {
   '../config': { ...configMock, '@noCallThru': true },
   '../btcd': { default: btcdMock }
 }).default;
@@ -57,9 +57,9 @@ const signDescriptor = {
   inputIndex: 0
 };
 
-describe('methods/computeInputScript.js', () => {
+describe('test/mocks/client/methods/computeInputScript.js', () => {
   describe('computeInputScript()', () => {
-    it('returns an input script', (done) => {
+    it('returns an input script', () => {
       const request = {
         transaction,
         signDescriptor
@@ -70,13 +70,8 @@ describe('methods/computeInputScript.js', () => {
 64,185,196,247,208,149,109,90,2,32,104,164,181,38,108,57,36,142,143,179,231,77,58,247,161,234,247,232,88,23,145,174,160,222,108,114,126,105,130,68,232,216,1,33,3,140,42,85,223,40,1,102,45,83,192,225,192,146,218,2,116,150,53,59,135,49,49,244,227,78,123,248,215,3,126,115,131
       ]);
 
-      computeInputScript({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return computeInputScript(request).then(response => {
         assert(response.signatureScript.equals(expectedSignatureScript));
-        done();
       });
     });
   });

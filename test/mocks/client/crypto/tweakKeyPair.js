@@ -22,7 +22,7 @@ const tweakKeyPair = (keyPair, signDescriptor) => {
   const { singleTweak, doubleTweak } = signDescriptor;
 
   if (doubleTweak && doubleTweak.length) {
-    // TODO
+    // TODO: Implement double tweak.
     throw new Error('DoubleTweak is not implemented');
   }
 

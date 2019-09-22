@@ -2,15 +2,15 @@ import proxyquire from 'proxyquire';
 import { expect } from 'chai';
 import btcwalletMock from '../mocks/btcwallet';
 
-const newAddress = proxyquire('../../../src/methods/newAddress', {
+const newAddress = proxyquire('../../mocks/client/methods/newAddress', {
   '../btcwallet': { default: btcwalletMock }
 }).default;
 
-describe('methods/newAddress.js', () => {
+describe('test/mocks/client/methods/newAddress.js', () => {
   describe('newAddress()', () => {
-    it('returns a new address', (done) => {
+    it('returns a new address', () => {
       const request = {
-        type: 2, // p2sh-p2wpkh 
+        type: 2, // p2sh-p2wpkh
         change: false
       };
 
@@ -19,13 +19,8 @@ describe('methods/newAddress.js', () => {
         address: '15KDN6U7TkGub1pYEMKewMgXGQzoQSdHyQ'
       };
 
-      newAddress({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return newAddress(request).then(response => {
         expect(response).to.deep.equal(expectedResponse);
-        done();
       });
     });
   });

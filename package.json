@@ -2,7 +2,7 @@
   "name": "pine-lightning",
   "version": "0.0.1-alpha.1",
   "description": "",
-  "main": "src/server.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "node build/index.js",
     "dev": "node src/index.dev.js",
@@ -10,7 +10,8 @@
     "test": "node_modules/.bin/nyc node_modules/.bin/_mocha --require @babel/register --exit -- \"test/unit/**/*.test.js\"",
     "test-it": "node_modules/.bin/_mocha --require @babel/register --exit -- \"test/integration/**/*.test.js\"",
     "lint": "./node_modules/.bin/eslint --ext .js src/ test/",
-    "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | node_modules/.bin/coveralls"
+    "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | node_modules/.bin/coveralls",
+    "mock-client": "node test/mocks/client/index.dev.js"
   },
   "author": "Timothy E. Johansson <timothy@blockfirm.se>",
   "website": "https://pine.pm",
@@ -52,5 +53,9 @@
     "nyc": "^14.1.1",
     "proxyquire": "^1.8.0",
     "sinon": "^4.0.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
   }
 }

@@ -1,8 +1,8 @@
 import assert from 'assert';
 import * as bitcoin from 'bitcoinjs-lib';
-import tweakKeyPair from '../../../src/crypto/tweakKeyPair';
+import tweakKeyPair from '../../mocks/client/crypto/tweakKeyPair';
 
-describe('crypto/tweakKeyPair.js', () => {
+describe('test/mocks/client/crypto/tweakKeyPair.js', () => {
   describe('tweakKeyPair()', () => {
     describe('when no tweak is set', () => {
       it('returns the passed key pair', () => {
@@ -17,7 +17,6 @@ describe('crypto/tweakKeyPair.js', () => {
         assert(tweakedKeyPair.publicKey.equals(keyPair.publicKey));
       });
     });
-
 
     describe('when singleTweak is set', () => {
       it('returns a single-tweaked key pair', () => {

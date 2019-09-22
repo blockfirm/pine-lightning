@@ -3,7 +3,7 @@ import config from '../config';
 
 const KEY_FAMILY_REVOCATION_ROOT = 5;
 
-const getRevocationRootKey = (_, callback) => {
+const getRevocationRootKey = () => {
   console.log(`getRevocationRootKey()`);
   const keyIndex = 0; // TODO: Should increment so that a new key is always returned.
 
@@ -15,8 +15,8 @@ const getRevocationRootKey = (_, callback) => {
 
   const privateKey = keyPair.privateKey;
 
-  callback(null, { privateKey });
   console.log(`→ { privateKey: <${privateKey.length}> }\n`);
+  return Promise.resolve({ privateKey });
 };
 
 export default getRevocationRootKey;

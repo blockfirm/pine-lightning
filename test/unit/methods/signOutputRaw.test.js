@@ -3,7 +3,7 @@ import assert from 'assert';
 
 import configMock from '../mocks/config';
 
-const signOutputRaw = proxyquire('../../../src/methods/signOutputRaw', {
+const signOutputRaw = proxyquire('../../mocks/client/methods/signOutputRaw', {
   '../config': { ...configMock, '@noCallThru': true },
 }).default;
 
@@ -51,9 +51,9 @@ const signDescriptor = {
   inputIndex: 0
 };
 
-describe('methods/signOutputRaw.js', () => {
+describe('test/mocks/client/methods/signOutputRaw.js', () => {
   describe('signOutputRaw()', () => {
-    it('returns a signature', (done) => {
+    it('returns a signature', () => {
       const request = {
         transaction,
         signDescriptor
@@ -61,13 +61,8 @@ describe('methods/signOutputRaw.js', () => {
 
       const expectedSignature = Buffer.from('3045022100db4b697ef1df74b56ef9c9d5f8265ec4cdaa4fc6472272c868528bb5059d518402205c5e87c2867be96a745995a6d9ddb719e6bb3608cab3f35770c4d369dfaa4342', 'hex');
 
-      signOutputRaw({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return signOutputRaw(request).then(response => {
         assert(response.signature.equals(expectedSignature));
-        done();
       });
     });
   });

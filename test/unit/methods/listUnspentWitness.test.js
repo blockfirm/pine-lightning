@@ -4,14 +4,14 @@ import { expect } from 'chai';
 import configMock from '../mocks/config';
 import btcwalletMock from '../mocks/btcwallet';
 
-const listUnspentWitness = proxyquire('../../../src/methods/listUnspentWitness', {
+const listUnspentWitness = proxyquire('../../mocks/client/methods/listUnspentWitness', {
   '../config': { ...configMock, '@noCallThru': true },
   '../btcwallet': { default: btcwalletMock }
 }).default;
 
-describe('methods/listUnspentWitness.js', () => {
+describe('test/mocks/client/methods/listUnspentWitness.js', () => {
   describe('listUnspentWitness()', () => {
-    it('returns utxos', (done) => {
+    it('returns utxos', () => {
       const request = {
         minConfirmations: 3,
         maxConfirmations: null
@@ -30,13 +30,8 @@ describe('methods/listUnspentWitness.js', () => {
         }]
       };
 
-      listUnspentWitness({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return listUnspentWitness(request).then(response => {
         expect(response).to.deep.equal(expectedResponse);
-        done();
       });
     });
   });

@@ -205,20 +205,20 @@ const rawTxInWitnessSignature = ({ transaction, sigHashes, inputIndex, amount, w
   return derEncoded;
 };
 
-const signOutputRaw = ({ request }, callback) => {
+const signOutputRaw = (request) => {
   const { transaction, signDescriptor } = request;
   console.log(`signOutputRaw(${JSON.stringify(transaction)}, ${JSON.stringify(signDescriptor)})`);
 
   const keyPair = findKeyPair(signDescriptor.keyDescriptor);
 
   if (!keyPair) {
-    return callback(new Error('Could not locate key'));
+    return Promise.reject(new Error('Could not locate key'));
   }
 
   const pubkey = bitcoin.ECPair.fromPublicKey(signDescriptor.keyDescriptor.publicKey);
 
   if (!keyPair.publicKey.equals(pubkey.publicKey)) {
-    return callback(new Error('Located key does not match public key'));
+    return Promise.reject(new Error('Located key does not match public key'));
   }
 
   const tweakedKeyPair = tweakKeyPair(keyPair, signDescriptor);
@@ -236,8 +236,8 @@ const signOutputRaw = ({ request }, callback) => {
   // Chop off the sighash flag at the end of the signature.
   const signature = witnessSignature.slice(0, witnessSignature.length - 1);
 
-  callback(null, { signature });
   console.log(`→ ${JSON.stringify(signature)}\n`);
+  return Promise.resolve({ signature });
 };
 
 export default signOutputRaw;

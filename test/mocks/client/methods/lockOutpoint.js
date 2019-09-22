@@ -1,6 +1,6 @@
 export const lockedOutpoints = {};
 
-const lockOutpoint = ({ request }, callback) => {
+const lockOutpoint = (request) => {
   console.log(`lockOutpoint(${request.hash.toString('hex')}, ${request.index})`);
   const { hash, index } = request;
   const txid = hash.toString('hex');
@@ -8,8 +8,8 @@ const lockOutpoint = ({ request }, callback) => {
   lockedOutpoints[txid] = lockedOutpoints[txid] || {};
   lockedOutpoints[txid][index] = true;
 
-  callback(null, {});
   console.log('→ {}\n');
+  return Promise.resolve({});
 };
 
 export default lockOutpoint;

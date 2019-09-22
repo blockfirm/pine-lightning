@@ -4,14 +4,14 @@ import { expect } from 'chai';
 import configMock from '../mocks/config';
 import btcwalletMock from '../mocks/btcwallet';
 
-const fetchInputInfo = proxyquire('../../../src/methods/fetchInputInfo', {
+const fetchInputInfo = proxyquire('../../mocks/client/methods/fetchInputInfo', {
   '../config': { ...configMock, '@noCallThru': true },
   '../btcwallet': { default: btcwalletMock }
 }).default;
 
-describe('methods/fetchInputInfo.js', () => {
+describe('test/mocks/client/methods/fetchInputInfo.js', () => {
   describe('fetchInputInfo()', () => {
-    it('returns input info', (done) => {
+    it('returns input info', () => {
       const request = {
         hash: Buffer.from('3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a', 'hex'), // From the btcwallet mock.
         index: 0
@@ -30,13 +30,8 @@ describe('methods/fetchInputInfo.js', () => {
         }
       };
 
-      fetchInputInfo({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return fetchInputInfo(request).then(response => {
         expect(response).to.deep.equal(expectedResponse);
-        done();
       });
     });
   });

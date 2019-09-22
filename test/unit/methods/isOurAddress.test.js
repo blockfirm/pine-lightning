@@ -2,13 +2,13 @@ import proxyquire from 'proxyquire';
 import { expect } from 'chai';
 import configMock from '../mocks/config';
 
-const isOurAddress = proxyquire('../../../src/methods/isOurAddress', {
+const isOurAddress = proxyquire('../../mocks/client/methods/isOurAddress', {
   '../config': { ...configMock }
 }).default;
 
-describe('methods/isOurAddress.js', () => {
+describe('test/mocks/client/methods/isOurAddress.js', () => {
   describe('isOurAddress()', () => {
-    it('returns true when the address belongs to the wallet', (done) => {
+    it('returns true when the address belongs to the wallet', () => {
       const request = {
         address: 'mra6xTvjp16VYHg8Xa59mzo4Ri8UNcYiS1'
       };
@@ -17,17 +17,12 @@ describe('methods/isOurAddress.js', () => {
         isOurAddress: true
       };
 
-      isOurAddress({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return isOurAddress(request).then(response => {
         expect(response).to.deep.equal(expectedResponse);
-        done();
       });
     });
 
-    it('returns false when the address does not belong to the wallet', (done) => {
+    it('returns false when the address does not belong to the wallet', () => {
       const request = {
         address: 'mh26xTvjp16VYHg8Xa31mzo4Di8FacYiv9'
       };
@@ -36,13 +31,8 @@ describe('methods/isOurAddress.js', () => {
         isOurAddress: false
       };
 
-      isOurAddress({ request }, (error, response) => {
-        if (error) {
-          return done(error);
-        }
-
+      return isOurAddress(request).then(response => {
         expect(response).to.deep.equal(expectedResponse);
-        done();
       });
     });
   });

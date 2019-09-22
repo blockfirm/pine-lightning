@@ -95,19 +95,19 @@ const createTransactionBuilder = (transaction) => {
   });
 };
 
-const computeInputScript = ({ request }, callback) => {
+const computeInputScript = (request) => {
   const { transaction, signDescriptor } = request;
   console.log(`computeInputScript(${JSON.stringify(transaction)}, ${JSON.stringify(signDescriptor)})`);
 
   const keyPair = findKeyByOutputScript(signDescriptor.output.pkScript);
 
   if (!keyPair) {
-    return callback(new Error('Could not locate key'));
+    return Promise.reject(new Error('Could not locate key'));
   }
 
   const tweakedKeyPair = tweakKeyPair(keyPair, signDescriptor);
 
-  createTransactionBuilder(transaction)
+  return createTransactionBuilder(transaction)
     .then(psbt => {
       psbt.signInput(
         signDescriptor.inputIndex,
@@ -124,12 +124,12 @@ const computeInputScript = ({ request }, callback) => {
         signatureScript: builtTransaction.ins[0].script
       };
 
-      callback(null, response);
       console.log(`→ ${JSON.stringify(response)}\n`);
+      return response;
     })
     .catch(error => {
-      callback(error);
       console.log(`→ ERROR: ${error.message}\n`);
+      throw error;
     });
 };
 

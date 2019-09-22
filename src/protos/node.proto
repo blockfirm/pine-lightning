@@ -3,8 +3,7 @@ syntax = "proto3";
 // The following RPC methods implements methods found in lnd so that
 // lnd doesn't need to hold any private keys and can instead use this
 // gRPC service to sign transactions and get wallet information.
-
-service Pine {
+service NodeService {
   // SignMessage signs a message using the user's private key.
   rpc SignMessage(SignMessageRequest) returns (SignMessageResponse) {}
 

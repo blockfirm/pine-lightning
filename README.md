@@ -15,7 +15,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 
 ## Dependencies
 
-* [Node.js](https://nodejs.org) and [gRPC](https://grpc.io) for creating the RPC API
+* [Node.js](https://nodejs.org) (`v12`) and [gRPC](https://grpc.io) for creating the RPC API
 * [Pine lnd](https://github.com/timothyej/lnd) as lightning node without private keys
 * [btcwallet](https://github.com/btcsuite/btcwallet) and [btcd](https://github.com/btcsuite/btcd) for mocking a wallet during development
 
