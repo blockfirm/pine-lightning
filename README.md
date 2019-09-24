@@ -10,6 +10,10 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 * [API](#api)
   * [Documentation](#documentation)
   * [Regenerate client](#regenerate-client)
+* [Testing](#testing)
+  * [Unit tests](#unit-tests)
+  * [Integration tests](#integration-tests)
+  * [Mocking](#mocking)
 * [Contributing](#contributing)
 * [Licensing](#licensing)
 
@@ -52,12 +56,43 @@ to interact with the user's wallet to sign transactions and messages.
 
 ### Documentation
 
-For documentation of the API, please refer to the [rpc.proto](src/rpc.proto) file.
+For documentation of the API, please refer to the [node.proto](src/protos/node.proto) file.
 
 ### Regenerate client
 
 To regenerate the go client used by the Pine lnd node, go to `scripts/` and run
 `sh regenerate-proto.sh`.
+
+## Testing
+
+### Unit tests
+
+The unit tests mostly test the mock client implementation for now. The proxy and API
+integrations are easier to test using integration tests.
+
+To run the unit tests, run the following command:
+
+```
+$ npm test
+```
+
+### Integration tests
+
+The integration tests test that the different APIs are working together as expected.
+
+To run the integration tests, run the following command:
+
+```
+$ npm run test-it
+```
+
+### Mocking
+
+To facilitate development, a mock client is available that will act as a Pine client:
+
+```
+$ npm run mock-client
+```
 
 ## Contributing
 
