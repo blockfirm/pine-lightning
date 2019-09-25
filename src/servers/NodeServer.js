@@ -27,15 +27,15 @@ export default class NodeServer {
     );
 
     const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
-    const { NodeService } = protoDescriptor;
+    const { Pine } = protoDescriptor;
     const server = new grpc.Server();
 
     const methods = getMethodsFromService(
-      NodeService.service,
+      Pine.service,
       this._handleCall.bind(this)
     );
 
-    server.addService(NodeService.service, methods);
+    server.addService(Pine.service, methods);
     server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
     this.server = server;
