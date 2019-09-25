@@ -56,12 +56,15 @@ to interact with the user's wallet to sign transactions and messages.
 
 ### Documentation
 
-For documentation of the API, please refer to the [node.proto](src/protos/node.proto) file.
+For documentation of the API, please refer to the [rpc.proto](src/protos/rpc.proto) file.
 
 ### Regenerate client
 
-To regenerate the go client used by the Pine lnd node, go to `scripts/` and run
-`sh regenerate-proto.sh`.
+To regenerate the go client used by the Pine lnd node, run the following command:
+
+```
+$ npm run regenerate-proto
+```
 
 ## Testing
 

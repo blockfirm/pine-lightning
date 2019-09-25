@@ -11,7 +11,8 @@
     "test-it": "node_modules/.bin/_mocha --require @babel/register --exit -- \"test/integration/**/*.test.js\"",
     "lint": "./node_modules/.bin/eslint --ext .js src/ test/",
     "coveralls": "node_modules/.bin/nyc report --reporter=text-lcov | node_modules/.bin/coveralls",
-    "mock-client": "node test/mocks/client/index.dev.js"
+    "mock-client": "node test/mocks/client/index.dev.js",
+    "regenerate-proto": "sh scripts/regenerate-proto.sh"
   },
   "author": "Timothy E. Johansson <timothy@blockfirm.se>",
   "website": "https://pine.pm",
