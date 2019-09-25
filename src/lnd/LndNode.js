@@ -15,7 +15,7 @@ const runCmd = (cmd, args, cwd) => {
   return child;
 };
 
-export default class LndManager {
+export default class LndNode {
   constructor(config) {
     this.config = config;
   }

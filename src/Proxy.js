@@ -1,11 +1,11 @@
 import { ClientServer, NodeServer } from './servers';
-import LndManager from './LndManager';
+import LndNode from './lnd/LndNode';
 
 export default class Proxy {
   constructor(config) {
     this.config = config;
 
-    this.lndManager = new LndManager(config.lnd);
+    this.lndNode = new LndNode(config.lnd);
     this.clientServer = new ClientServer(config.servers.client);
     this.nodeServer = new NodeServer(config.servers.node);
 
@@ -21,11 +21,11 @@ export default class Proxy {
   }
 
   _onClientConnect() {
-    this.lndManager.start();
+    this.lndNode.start();
   }
 
   _onClientDisconnect() {
-    this.lndManager.stop();
+    this.lndNode.stop();
   }
 
   _onNodeRequest(methodName, request, callback) {
