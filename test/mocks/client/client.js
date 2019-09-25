@@ -52,7 +52,15 @@ export default class Client {
   }
 
   _onMessage(message) {
-    const { id, method, request } = JSON.parse(message);
+    let ServerRequest;
+
+    try {
+      ServerRequest = JSON.parse(message);
+    } catch (error) {
+      return this.websocket.send(JSON.stringify({ error: 'Malformed request' }));
+    }
+
+    const { id, method, request } = ServerRequest;
 
     if (!methods[method]) {
       this.websocket.send(JSON.stringify({ id, error: 'Invalid method' }));
