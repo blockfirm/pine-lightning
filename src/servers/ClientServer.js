@@ -1,5 +1,6 @@
 import http from 'http';
 import WebSocket from 'ws';
+import deserialize from '../deserialize';
 
 export default class ClientServer {
   constructor(config) {
@@ -65,7 +66,15 @@ export default class ClientServer {
   }
 
   _onClientMessage(ws, message) {
-    const { id, response, error } = JSON.parse(message);
+    let deserialized;
+
+    try {
+      deserialized = deserialize(message);
+    } catch (error) {
+      return console.error('[CLIENT] Error when parsing message:', error.message);
+    }
+
+    const { id, response, error } = deserialized;
     const callback = ws.callbacks[id];
 
     if (!callback) {

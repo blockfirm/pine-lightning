@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import deserialize from '../../../src/deserialize';
 import methods from './methods';
 
 const RECONNECT_INTERVAL = 1000;
@@ -52,15 +53,15 @@ export default class Client {
   }
 
   _onMessage(message) {
-    let ServerRequest;
+    let serverRequest;
 
     try {
-      ServerRequest = JSON.parse(message);
+      serverRequest = deserialize(message);
     } catch (error) {
       return this.websocket.send(JSON.stringify({ error: 'Malformed request' }));
     }
 
-    const { id, method, request } = ServerRequest;
+    const { id, method, request } = serverRequest;
 
     if (!methods[method]) {
       this.websocket.send(JSON.stringify({ id, error: 'Invalid method' }));
