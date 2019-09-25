@@ -6,7 +6,10 @@ const getMethodsFromService = (service, handler) => {
 
   Object.values(service).forEach(method => {
     const name = method.originalName;
-    methods[name] = () => handler(name, ...arguments);
+
+    methods[name] = function () {
+      handler(name, ...arguments);
+    };
   });
 
   return methods;
