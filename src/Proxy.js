@@ -1,43 +1,34 @@
 import { ClientServer, NodeServer } from './servers';
+import LndManager from './LndManager';
 
 export default class Proxy {
   constructor(config) {
     this.config = config;
 
+    this.lndManager = new LndManager(config.lnd);
     this.clientServer = new ClientServer(config.servers.client);
     this.nodeServer = new NodeServer(config.servers.node);
 
-    this.nodeServer.onRequest(this._proxyRequest.bind(this));
+    this.clientServer.on('connect', this._onClientConnect.bind(this));
+    this.clientServer.on('disconnect', this._onClientDisconnect.bind(this));
+
+    this.nodeServer.on('request', this._onNodeRequest.bind(this));
   }
 
   start() {
     this.clientServer.start();
     this.nodeServer.start();
-
-    // DEBUG 1
-    setTimeout(() => {
-      this._proxyRequest('deriveKey', {
-        keyLocator: {
-          keyFamily: 5,
-          index: 0
-        }
-      }, (error, response) => {
-        console.log('[PROXY] deriveKey', error, response);
-      });
-    }, 10000);
-
-    // DEBUG 2
-    setTimeout(() => {
-      this._proxyRequest('newAddress', {
-        type: 2,
-        change: 0
-      }, (error, response) => {
-        console.log('[PROXY] newAddress', error, response);
-      });
-    }, 10000);
   }
 
-  _proxyRequest(methodName, request, callback) {
+  _onClientConnect() {
+    this.lndManager.start();
+  }
+
+  _onClientDisconnect() {
+    this.lndManager.stop();
+  }
+
+  _onNodeRequest(methodName, request, callback) {
     try {
       this.clientServer.sendRequest(methodName, request, callback);
     } catch (error) {

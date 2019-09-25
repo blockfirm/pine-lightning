@@ -1,3 +1,4 @@
+import events from 'events';
 import grpc from 'grpc';
 import * as protoLoader from '@grpc/proto-loader';
 
@@ -41,6 +42,7 @@ export default class NodeServer {
     server.addService(Pine.service, methods);
     server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
+    this.eventEmitter = new events.EventEmitter();
     this.server = server;
     this.config = config;
   }
@@ -51,15 +53,12 @@ export default class NodeServer {
     console.log(`[NODE] Server listening at ${host}:${port}`);
   }
 
-  onRequest(callback) {
-    this._onRequest = callback;
+  on(event, listener) {
+    this.eventEmitter.on(event, listener);
   }
 
   _handleCall(methodName, call, callback) {
     const { request } = call;
-
-    if (this._onRequest) {
-      this._onRequest(methodName, request, callback);
-    }
+    this.eventEmitter.emit('request', methodName, request, callback);
   }
 }

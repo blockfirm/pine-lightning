@@ -10,6 +10,16 @@ const config = {
       host: '0.0.0.0',
       port: 8910
     }
+  },
+  lnd: {
+    bin: '~/go/bin/lnd',
+    cwd: '~/.lnd',
+    adminMacaroon: '~/.lnd/data/chain/bitcoin/simnet/admin.macaroon',
+    args: [
+      '--datadir=data',
+      '--logdir=log',
+      '--debuglevel=info'
+    ]
   }
 };
 

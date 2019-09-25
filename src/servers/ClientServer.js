@@ -1,9 +1,11 @@
 import http from 'http';
 import WebSocket from 'ws';
+import events from 'events';
 import deserialize from '../deserialize';
 
 export default class ClientServer {
   constructor(config) {
+    this.eventEmitter = new events.EventEmitter();
     this.config = config;
     this.server = http.createServer();
 
@@ -12,15 +14,15 @@ export default class ClientServer {
       clientTracking: true
     });
 
-    this.wss.on('connection', this._onConnection.bind(this));
+    this.wss.on('connection', this._onClientConnect.bind(this));
     this.wss.on('close', this._onClose.bind(this));
     this.wss.on('error', this._onError.bind(this));
-    this.wss.on('listen', this._onListen.bind(this));
   }
 
   start() {
     const { host, port } = this.config;
     this.server.listen(port, host);
+    console.log(`[CLIENT] Server listening at ${host}:${port}`);
   }
 
   sendRequest(methodName, request, callback) {
@@ -43,13 +45,24 @@ export default class ClientServer {
     client.send(data);
   }
 
-  _onConnection(ws) {
+  on(event, listener) {
+    this.eventEmitter.on(event, listener);
+  }
+
+  _onClientConnect(ws) {
     console.log('[CLIENT] New client connected');
 
     ws.callCounter = ws.callCounter || 0;
     ws.callbacks = ws.callbacks || {};
 
     ws.on('message', this._onClientMessage.bind(this, ws));
+    ws.on('close', this._onClientDisconnect.bind(this, ws));
+
+    this.eventEmitter.emit('connect', ws);
+  }
+
+  _onClientDisconnect(ws) {
+    this.eventEmitter.emit('disconnect', ws);
   }
 
   _onClose() {
@@ -60,12 +73,7 @@ export default class ClientServer {
     console.error('[CLIENT] Server error:', error.message);
   }
 
-  _onListen() {
-    const { host, port } = this.config;
-    console.log(`[CLIENT] Server listening at ${host}:${port}`);
-  }
-
-  _onClientMessage(ws, message) {
+   _onClientMessage(ws, message) {
     let deserialized;
 
     try {
