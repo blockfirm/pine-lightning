@@ -22,22 +22,22 @@ export default class LndNode {
 
   start() {
     console.log('[LND] Starting node...');
-    const { bin, cwd } = this.config;
+    const { bin, cwd, rpcPort } = this.config;
 
     const args = [
-      '--rpclisten=localhost:10001',
-      '--listen=localhost:10011',
-      '--restlisten=localhost:8001',
-      ...this.config.args
+      ...this.config.args,
+      `--rpclisten=localhost:${rpcPort}`,
+      '--nolisten',
+      '--norest'
     ];
 
     this.process = runCmd(bin, args, cwd);
     this.process.on('close', this._onShutdown.bind(this));
 
     // TODO: Find a better way than using a timeout.
-    setTimeout(() => {
-      this.connect().then(() => this.unlock());
-    }, 1000);
+    return new Promise(resolve => setTimeout(resolve, 1000))
+      .then(() => this.connect())
+      .then(() => this.unlock());
   }
 
   stop() {
@@ -46,9 +46,15 @@ export default class LndNode {
   }
 
   connect() {
-    const macaroonPath = this.config.adminMacaroon;
+    const { adminMacaroon, rpcPort } = this.config;
+    const server = `localhost:${rpcPort}`;
 
-    return createLnrpc({ macaroonPath }).then(lnrpc => {
+    const options = {
+      macaroonPath: adminMacaroon,
+      server
+    };
+
+    return createLnrpc(options).then(lnrpc => {
       this.lnrpc = lnrpc;
     });
   }
