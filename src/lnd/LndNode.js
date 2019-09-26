@@ -42,7 +42,14 @@ export default class LndNode {
 
   stop() {
     console.log('[LND] Shutting down...');
-    return this.lnrpc.stopDaemon({});
+
+    return this.lnrpc.stopDaemon({})
+      .catch(() => {
+        this.process.kill();
+      })
+      .then(() => {
+        this.process = null;
+      });
   }
 
   connect() {
