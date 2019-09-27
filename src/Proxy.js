@@ -5,7 +5,7 @@ export default class Proxy {
   constructor(config) {
     this.config = config;
 
-    this.lndNodeManager = new LndNodeManager(config.lnd);
+    this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
     this.clientServer = new ClientServer(config.servers.client);
     this.nodeServer = new NodeServer(config.servers.node);
 

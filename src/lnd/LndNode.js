@@ -23,12 +23,13 @@ export default class LndNode {
 
   start() {
     console.log('[LND] Starting node...');
-    const { bin, cwd, rpcPort } = this.config;
+    const { bin, cwd, server, rpcPort } = this.config;
 
     const args = [
       ...this.config.args,
       `--rpclisten=localhost:${rpcPort}`,
       `--pine.id=${this.pineId}`,
+      `--pine.rpc=${server.host}:${server.port}`,
       '--nolisten',
       '--norest'
     ];

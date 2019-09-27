@@ -17,8 +17,9 @@ const getUnusedPort = () => {
 };
 
 export default class LndNodeManager {
-  constructor(config) {
+  constructor(config, serverConfig) {
     this.config = config;
+    this.serverConfig = serverConfig;
     this.nodes = {};
   }
 
@@ -30,6 +31,7 @@ export default class LndNodeManager {
     return getUnusedPort().then(port => {
       const node = new LndNode(pineId, {
         ...this.config,
+        server: this.serverConfig,
         rpcPort: port
       });
 
