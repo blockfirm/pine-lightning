@@ -19,16 +19,36 @@ const getUnusedPort = () => {
 export default class LndNodeManager {
   constructor(config) {
     this.config = config;
+    this.nodes = {};
   }
 
-  spawn() {
+  spawn(pineId) {
+    if (!pineId) {
+      return Promise.reject('Cannot start a node without a Pine ID');
+    }
+
     return getUnusedPort().then(port => {
-      const node = new LndNode({
+      const node = new LndNode(pineId, {
         ...this.config,
         rpcPort: port
       });
 
-      return node.start().then(() => node);
+      this.nodes[pineId] = node;
+      return node.start();
     });
+  }
+
+  stop(pineId) {
+    if (!pineId) {
+      return Promise.reject('Cannot stop a node without a Pine ID');
+    }
+
+    const node = this.nodes[pineId];
+
+    if (!node) {
+      return Promise.reject('No node was found with that Pine ID');
+    }
+
+    return node.stop();
   }
 }

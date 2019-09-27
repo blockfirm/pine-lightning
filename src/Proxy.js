@@ -20,19 +20,17 @@ export default class Proxy {
     this.nodeServer.start();
   }
 
-  _onClientConnect() {
-    this.lndNodeManager.spawn(lndNode => {
-      this.lndNode = lndNode;
-    });
+  _onClientConnect({ pineId }) {
+    this.lndNodeManager.spawn(pineId);
   }
 
-  _onClientDisconnect() {
-    this.lndNode.stop();
+  _onClientDisconnect({ pineId }) {
+    this.lndNodeManager.stop(pineId);
   }
 
-  _onNodeRequest(methodName, request, callback) {
+  _onNodeRequest({ pineId, methodName, request, callback }) {
     try {
-      this.clientServer.sendRequest(methodName, request, callback);
+      this.clientServer.sendRequest(pineId, methodName, request, callback);
     } catch (error) {
       console.error('[PROXY] Error', error.message);
       callback(error);

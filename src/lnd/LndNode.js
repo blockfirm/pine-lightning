@@ -16,7 +16,8 @@ const runCmd = (cmd, args, cwd) => {
 };
 
 export default class LndNode {
-  constructor(config) {
+  constructor(pineId, config) {
+    this.pineId = pineId;
     this.config = config;
   }
 
@@ -27,6 +28,7 @@ export default class LndNode {
     const args = [
       ...this.config.args,
       `--rpclisten=localhost:${rpcPort}`,
+      `--pine.id=${this.pineId}`,
       '--nolisten',
       '--norest'
     ];
@@ -43,13 +45,9 @@ export default class LndNode {
   stop() {
     console.log('[LND] Shutting down...');
 
-    return this.lnrpc.stopDaemon({})
-      .catch(() => {
-        this.process.kill();
-      })
-      .then(() => {
-        this.process = null;
-      });
+    return this.lnrpc.stopDaemon({}).catch(() => {
+      this.process.kill();
+    });
   }
 
   connect() {

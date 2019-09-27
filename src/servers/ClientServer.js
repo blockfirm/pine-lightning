@@ -1,18 +1,17 @@
 import http from 'http';
-import WebSocket from 'ws';
 import events from 'events';
+import WebSocket from 'ws';
+import uuidv4 from 'uuid/v4';
 import deserialize from '../deserialize';
 
 export default class ClientServer {
   constructor(config) {
     this.eventEmitter = new events.EventEmitter();
+    this.clients = [];
     this.config = config;
-    this.server = http.createServer();
 
-    this.wss = new WebSocket.Server({
-      server: this.server,
-      clientTracking: true
-    });
+    this.server = http.createServer();
+    this.wss = new WebSocket.Server({ server: this.server });
 
     this.wss.on('connection', this._onClientConnect.bind(this));
     this.wss.on('close', this._onClose.bind(this));
@@ -25,14 +24,14 @@ export default class ClientServer {
     console.log(`[CLIENT] Server listening at ${host}:${port}`);
   }
 
-  sendRequest(methodName, request, callback) {
-    const { clients } = this.wss;
+  // eslint-disable-next-line max-params
+  sendRequest(pineId, methodName, request, callback) {
+    const client = this.clients[pineId];
 
-    if (!clients || !clients.size) {
+    if (!client) {
       throw Error('Client is not connected');
     }
 
-    const client = clients.values().next().value;
     const callId = client.callCounter++;
 
     const data = JSON.stringify({
@@ -50,8 +49,12 @@ export default class ClientServer {
   }
 
   _onClientConnect(ws) {
-    console.log('[CLIENT] New client connected');
+    const pineId = uuidv4();
 
+    delete this.clients[pineId];
+    this.clients[pineId] = ws;
+
+    ws.pineId = pineId;
     ws.callCounter = ws.callCounter || 0;
     ws.callbacks = ws.callbacks || {};
 
@@ -59,9 +62,11 @@ export default class ClientServer {
     ws.on('close', this._onClientDisconnect.bind(this, ws));
 
     this.eventEmitter.emit('connect', ws);
+    console.log('[CLIENT] New client connected');
   }
 
   _onClientDisconnect(ws) {
+    delete this.clients[ws.pineId];
     this.eventEmitter.emit('disconnect', ws);
   }
 
@@ -73,7 +78,7 @@ export default class ClientServer {
     console.error('[CLIENT] Server error:', error.message);
   }
 
-   _onClientMessage(ws, message) {
+  _onClientMessage(ws, message) {
     let deserialized;
 
     try {

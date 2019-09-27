@@ -59,6 +59,17 @@ export default class NodeServer {
 
   _handleCall(methodName, call, callback) {
     const { request } = call;
-    this.eventEmitter.emit('request', methodName, request, callback);
+    const pineId = call.metadata.get('pine-id')[0];
+
+    if (!pineId) {
+      return callback(new Error('RPC call is missing Pine ID'));
+    }
+
+    this.eventEmitter.emit('request', {
+      pineId,
+      methodName,
+      request,
+      callback
+    });
   }
 }
