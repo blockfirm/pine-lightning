@@ -28,16 +28,22 @@ export default class LndNodeManager {
       return Promise.reject('Cannot start a node without a Pine ID');
     }
 
-    return getUnusedPort().then(port => {
-      const node = new LndNode(pineId, {
-        ...this.config,
-        server: this.serverConfig,
-        rpcPort: port
-      });
+    return getUnusedPort()
+      .then(port => {
+        const node = new LndNode(pineId, {
+          ...this.config,
+          server: this.serverConfig,
+          rpcPort: port
+        });
 
-      this.nodes[pineId] = node;
-      return node.start();
-    });
+        this.nodes[pineId] = node;
+
+        return node.start();
+      })
+      .catch(error => {
+        console.error('Unable to spawn lnd node:', error.message);
+        throw new Error(`Unable to spawn lnd node: ${error.message}`);
+      });
   }
 
   stop(pineId) {
@@ -51,6 +57,8 @@ export default class LndNodeManager {
       return Promise.reject('No node was found with that Pine ID');
     }
 
-    return node.stop();
+    return node.stop().then(() => {
+      this.nodes[pineId] = null;
+    });
   }
 }
