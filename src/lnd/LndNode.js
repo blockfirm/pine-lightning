@@ -3,40 +3,29 @@ import createLnrpc from 'lnrpc';
 
 const WALLET_PASSWORD = 'timothy123';
 
-const CONNECTION_ATTEMPT_DELAY = 500; // 0.5s
-const MAX_CONNECTION_ATTEMPTS = 15;
-
-const UNLOCK_ATTEMPT_DELAY = 500; // 0.5s
-const MAX_UNLOCK_ATTEMPTS = 4;
-
-const wait = (ms) => (
-  new Promise(resolve => setTimeout(resolve, ms))
-);
-
 const runCmd = (cmd, args, cwd) => {
   const child = spawn(cmd, args, { cwd });
 
   child.stdout.setEncoding('utf8');
-
-  child.stdout.on('data', (chunk) => {
-    console.log('[LND]', chunk);
-  });
+  child.stderr.setEncoding('utf8');
 
   return child;
 };
 
 export default class LndNode {
+  static STATE_NOT_STARTED = 0;
+  static STATE_WAITING_FOR_PASSWORD = 1;
+  static STATE_UNLOCKED = 2;
+
   constructor(pineId, config) {
     this.pineId = pineId;
     this.config = config;
-
-    this.connectionAttempts = 0;
-    this.unlockAttempts = 0;
+    this.state = this.STATE_NOT_STARTED;
   }
 
   start() {
-    console.log('[LND] Starting node...');
     const { bin, cwd, server, rpcPort } = this.config;
+    console.log('[LND] Starting node...');
 
     const args = [
       ...this.config.args,
@@ -47,14 +36,57 @@ export default class LndNode {
       '--norest'
     ];
 
-    this.process = runCmd(bin, args, cwd);
-    this.process.on('close', this._onShutdown.bind(this));
+    try {
+      this.process = runCmd(bin, args, cwd);
+    } catch (error) {
+      return Promise.reject(error);
+    }
 
-    return this.connect().then(() => this.unlock());
+    return new Promise((resolve, reject) => {
+      this.process.stdout.on('data', (chunk) => {
+        console.log('[LND]', chunk);
+
+        if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
+          this.state = this.STATE_WAITING_FOR_PASSWORD;
+          this.connect()
+            .then(() => this.unlock())
+            .catch(reject);
+        }
+
+        if (chunk.indexOf('LightningWallet opened') > -1) {
+          this.state = this.STATE_UNLOCKED;
+          resolve();
+        }
+      });
+
+      this.process.stderr.on('data', (chunk) => {
+        console.error('[LND] Error Output:', chunk);
+
+        if (this.state < this.STATE_UNLOCKED) {
+          reject(new Error(chunk));
+        }
+      });
+
+      this.process.on('error', (error) => {
+        console.error('[LND] Process Error:', error.message);
+        reject(error);
+      });
+
+      this.process.on('close', this._onShutdown.bind(this));
+    });
   }
 
   stop() {
     console.log('[LND] Shutting down...');
+
+    if (!this.process) {
+      return Promise.resolve();
+    }
+
+    if (!this.lnrpc) {
+      this.process.kill();
+      return Promise.resolve();
+    }
 
     return this.lnrpc.stopDaemon({}).catch(() => {
       this.process.kill();
@@ -70,19 +102,9 @@ export default class LndNode {
       server
     };
 
-    this.connectionAttempts++;
-
-    return createLnrpc(options)
-      .then(lnrpc => {
-        this.lnrpc = lnrpc;
-      })
-      .catch(error => {
-        if (this.connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
-          throw new Error(`Max connection attempts reached: ${error.message}`);
-        }
-
-        return wait(CONNECTION_ATTEMPT_DELAY).then(() => this.connect());
-      });
+    return createLnrpc(options).then(lnrpc => {
+      this.lnrpc = lnrpc;
+    });
   }
 
   unlock() {
@@ -93,20 +115,12 @@ export default class LndNode {
       wallet_password: Buffer.from(WALLET_PASSWORD)
     };
 
-    this.unlockAttempts++;
-
-    return this.lnrpc.unlockWallet(options).catch(error => {
-      if (this.unlockAttempts >= MAX_UNLOCK_ATTEMPTS) {
-        throw new Error(`Max unlock attempts reached: ${error.message}`);
-      }
-
-      return wait(UNLOCK_ATTEMPT_DELAY).then(() => this.unlock());
-    });
+    return this.lnrpc.unlockWallet(options);
   }
 
   _onShutdown(code) {
-    console.log('[LND] Node was shutdown with exit code', code);
     this.process = null;
     this.lnrpc = null;
+    console.log('[LND] Node was shutdown with exit code', code);
   }
 }
