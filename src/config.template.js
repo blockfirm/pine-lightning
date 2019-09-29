@@ -13,7 +13,7 @@ const config = {
   },
   lnd: {
     bin: '~/go/bin/lnd',
-    cwd: '~/.lnd',
+    cwdRoot: '~/.lnd',
     adminMacaroon: '~/.lnd/data/chain/bitcoin/simnet/admin.macaroon',
     args: [
       '--datadir=data',

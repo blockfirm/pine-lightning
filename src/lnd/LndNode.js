@@ -1,7 +1,10 @@
 import { spawn } from 'child_process';
+import path from 'path';
+import makeDir from 'make-dir';
 import createLnrpc from 'lnrpc';
 
 const WALLET_PASSWORD = 'timothy123';
+const DUMMY_SEED_MNEMONIC = 'abandon category occur glad square empower half chef door puzzle sauce begin coral text drive clarify always kid lizard piano dentist canyon practice together';
 
 const runCmd = (cmd, args, cwd) => {
   const child = spawn(cmd, args, { cwd });
@@ -15,7 +18,8 @@ const runCmd = (cmd, args, cwd) => {
 export default class LndNode {
   static STATE_NOT_STARTED = 0;
   static STATE_WAITING_FOR_PASSWORD = 1;
-  static STATE_UNLOCKED = 2;
+  static STATE_CREATING = 2;
+  static STATE_UNLOCKED = 3;
 
   constructor(pineId, config) {
     this.pineId = pineId;
@@ -23,25 +27,37 @@ export default class LndNode {
     this.state = this.STATE_NOT_STARTED;
   }
 
+  getCwd() {
+    return path.join(this.config.cwdRoot, this.pineId);
+  }
+
+  preStart() {
+    return makeDir(this.getCwd());
+  }
+
   start() {
-    const { bin, cwd, server, rpcPort } = this.config;
     console.log('[LND] Starting node...');
 
-    const args = [
-      ...this.config.args,
-      `--rpclisten=localhost:${rpcPort}`,
-      `--pine.id=${this.pineId}`,
-      `--pine.rpc=${server.host}:${server.port}`,
-      '--nolisten',
-      '--norest'
-    ];
+    return this.preStart().then(() => {
+      const { bin, server, rpcPort } = this.config;
+      const cwd = this.getCwd();
 
-    try {
+      const args = [
+        ...this.config.args,
+        `--rpclisten=localhost:${rpcPort}`,
+        `--pine.id=${this.pineId}`,
+        `--pine.rpc=${server.host}:${server.port}`,
+        '--nolisten',
+        '--norest'
+      ];
+
       this.process = runCmd(bin, args, cwd);
-    } catch (error) {
-      return Promise.reject(error);
-    }
 
+      return this.postStart();
+    });
+  }
+
+  postStart() {
     return new Promise((resolve, reject) => {
       this.process.stdout.on('data', (chunk) => {
         console.log('[LND]', chunk);
@@ -62,7 +78,7 @@ export default class LndNode {
       this.process.stderr.on('data', (chunk) => {
         console.error('[LND] Error Output:', chunk);
 
-        if (this.state < this.STATE_UNLOCKED) {
+        if (this.state < this.STATE_WAITING_FOR_PASSWORD) {
           reject(new Error(chunk));
         }
       });
@@ -115,7 +131,23 @@ export default class LndNode {
       wallet_password: Buffer.from(WALLET_PASSWORD)
     };
 
-    return this.lnrpc.unlockWallet(options);
+    return this.lnrpc.unlockWallet(options).catch(error => {
+      if (error.message.indexOf('wallet not found') > -1) {
+        return this.createWallet();
+      }
+    });
+  }
+
+  createWallet() {
+    console.log('[LND] Creating wallet...');
+
+    const options = {
+      // eslint-disable-next-line camelcase
+      wallet_password: Buffer.from(WALLET_PASSWORD),
+      cipher_seed_mnemonic: DUMMY_SEED_MNEMONIC.split(' ')
+    };
+
+    return this.lnrpc.initWallet(options);
   }
 
   _onShutdown(code) {
