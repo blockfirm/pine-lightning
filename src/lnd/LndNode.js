@@ -6,6 +6,12 @@ import createLnrpc from 'lnrpc';
 const WALLET_PASSWORD = 'timothy123';
 const DUMMY_SEED_MNEMONIC = 'abandon category occur glad square empower half chef door puzzle sauce begin coral text drive clarify always kid lizard piano dentist canyon practice together';
 
+const STATE_NOT_STARTED = 0;
+const STATE_STARTED = 1;
+const STATE_CREATING = 2;
+const STATE_UNLOCKED = 3;
+const STATE_READY = 4;
+
 const runCmd = (cmd, args, cwd) => {
   const child = spawn(cmd, args, { cwd });
 
@@ -16,15 +22,10 @@ const runCmd = (cmd, args, cwd) => {
 };
 
 export default class LndNode {
-  static STATE_NOT_STARTED = 0;
-  static STATE_WAITING_FOR_PASSWORD = 1;
-  static STATE_CREATING = 2;
-  static STATE_UNLOCKED = 3;
-
   constructor(pineId, config) {
     this.pineId = pineId;
     this.config = config;
-    this.state = this.STATE_NOT_STARTED;
+    this.state = STATE_NOT_STARTED;
   }
 
   getCwd() {
@@ -63,22 +64,24 @@ export default class LndNode {
         console.log('[LND]', chunk);
 
         if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
-          this.state = this.STATE_WAITING_FOR_PASSWORD;
-          this.connect()
-            .then(() => this.unlock())
-            .catch(reject);
+          this._onStarted().catch(reject);
         }
 
         if (chunk.indexOf('LightningWallet opened') > -1) {
-          this.state = this.STATE_UNLOCKED;
-          resolve();
+          this._onUnlocked().catch(reject);
+        }
+
+        if (chunk.indexOf('Updating backup file') > -1) {
+          if (this.state !== STATE_READY) {
+            this._onReady().then(resolve).catch(reject);
+          }
         }
       });
 
       this.process.stderr.on('data', (chunk) => {
         console.error('[LND] Error Output:', chunk);
 
-        if (this.state < this.STATE_WAITING_FOR_PASSWORD) {
+        if (this.state < STATE_STARTED) {
           reject(new Error(chunk));
         }
       });
@@ -90,6 +93,32 @@ export default class LndNode {
 
       this.process.on('close', this._onShutdown.bind(this));
     });
+  }
+
+  _onStarted() {
+    const withoutMacaroon = true;
+
+    this.state = STATE_STARTED;
+
+    return this.connect(withoutMacaroon)
+      .then(() => this.unlock())
+      .catch(error => {
+        if (error.message.indexOf('wallet not found') > -1) {
+          return this.createWallet();
+        }
+
+        throw error;
+      });
+  }
+
+  _onUnlocked() {
+    this.state = STATE_UNLOCKED;
+    return this.connect();
+  }
+
+  _onReady() {
+    this.state = STATE_READY;
+    return this.connectToPineHub();
   }
 
   stop() {
@@ -109,12 +138,14 @@ export default class LndNode {
     });
   }
 
-  connect() {
+  connect(withoutMacaroon) {
     const { adminMacaroon, rpcPort } = this.config;
+    const cwd = this.getCwd();
     const server = `localhost:${rpcPort}`;
+    const macaroonPath = withoutMacaroon ? null : path.join(cwd, adminMacaroon);
 
     const options = {
-      macaroonPath: adminMacaroon,
+      macaroonPath,
       server
     };
 
@@ -131,23 +162,36 @@ export default class LndNode {
       wallet_password: Buffer.from(WALLET_PASSWORD)
     };
 
-    return this.lnrpc.unlockWallet(options).catch(error => {
-      if (error.message.indexOf('wallet not found') > -1) {
-        return this.createWallet();
-      }
-    });
+    return this.lnrpc.unlockWallet(options);
   }
 
   createWallet() {
+    this.state = STATE_CREATING;
     console.log('[LND] Creating wallet...');
 
     const options = {
       // eslint-disable-next-line camelcase
       wallet_password: Buffer.from(WALLET_PASSWORD),
+      // eslint-disable-next-line camelcase
       cipher_seed_mnemonic: DUMMY_SEED_MNEMONIC.split(' ')
     };
 
     return this.lnrpc.initWallet(options);
+  }
+
+  connectToPineHub() {
+    const { pineHub } = this.config;
+    console.log('[LND] Connecting node to peer...');
+
+    const options = {
+      addr: {
+        pubkey: pineHub.publicKey,
+        host: pineHub.host
+      },
+      perm: true
+    };
+
+    return this.lnrpc.connectPeer(options);
   }
 
   _onShutdown(code) {

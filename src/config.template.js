@@ -14,12 +14,16 @@ const config = {
   lnd: {
     bin: '~/go/bin/lnd',
     cwdRoot: '~/.lnd',
-    adminMacaroon: '~/.lnd/data/chain/bitcoin/simnet/admin.macaroon',
+    adminMacaroon: 'data/chain/bitcoin/simnet/admin.macaroon',
     args: [
       '--datadir=data',
       '--logdir=log',
       '--debuglevel=info'
-    ]
+    ],
+    pineHub: {
+      publicKey: '',
+      host: 'localhost:10012'
+    }
   }
 };
 
