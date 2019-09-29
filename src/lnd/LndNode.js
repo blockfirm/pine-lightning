@@ -40,7 +40,7 @@ export default class LndNode {
       this.process.once('error', reject);
       this.process.once('exit', this._onExit.bind(this));
 
-      this.process.start();
+      this.process.start().catch(reject);
     });
   }
 

@@ -49,7 +49,7 @@ export default class Client {
   }
 
   _onError(error) {
-    console.error('[MOCK] Error:', error.message);
+    console.error(`[MOCK] ${error.name}: ${error.message}`);
   }
 
   _onMessage(message) {
@@ -59,6 +59,12 @@ export default class Client {
       serverRequest = deserialize(message);
     } catch (error) {
       return this.websocket.send(JSON.stringify({ error: 'Malformed request' }));
+    }
+
+    if (serverRequest.error) {
+      const error = new Error(serverRequest.error.message);
+      error.name = serverRequest.error.name;
+      return this._onError(error);
     }
 
     const { id, method, request } = serverRequest;

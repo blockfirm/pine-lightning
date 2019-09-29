@@ -43,7 +43,6 @@ export default class LndNodeManager {
       })
       .catch(error => {
         this.stop(pineId);
-        console.error('Unable to spawn lnd node:', error.message);
         throw new Error(`Unable to spawn lnd node: ${error.message}`);
       });
   }

@@ -44,6 +44,23 @@ export default class ClientServer {
     client.send(data);
   }
 
+  sendError(pineId, error) {
+    const client = this.clients[pineId];
+
+    if (!client) {
+      throw Error('Client is not connected');
+    }
+
+    const data = JSON.stringify({
+      error: {
+        name: error.name,
+        message: error.message
+      }
+    });
+
+    client.send(data);
+  }
+
   on(event, listener) {
     this.eventEmitter.on(event, listener);
   }
