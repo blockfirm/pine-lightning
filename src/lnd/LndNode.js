@@ -1,3 +1,4 @@
+import events from 'events';
 import path from 'path';
 import createLnrpc from 'lnrpc';
 import LndProcess from './LndProcess';
@@ -9,6 +10,15 @@ export default class LndNode {
   constructor(pineId, config) {
     this.config = config;
     this.process = new LndProcess(pineId, config);
+    this.eventEmitter = new events.EventEmitter();
+  }
+
+  once(event, listener) {
+    this.eventEmitter.once(event, listener);
+  }
+
+  removeAllListeners() {
+    this.eventEmitter.removeAllListeners();
   }
 
   start() {
@@ -16,15 +26,15 @@ export default class LndNode {
 
     return new Promise((resolve, reject) => {
       this.process.once('started', () => {
-        this._onStarted().catch(reject);
+        this._setup().catch(reject);
       });
 
       this.process.once('unlocked', () => {
-        this._onUnlocked().catch(reject);
+        this.connect().catch(reject);
       });
 
       this.process.once('ready', () => {
-        this._onReady().then(resolve).catch(reject);
+        this.connectToPineHub().then(resolve).catch(reject);
       });
 
       this.process.once('error', reject);
@@ -34,7 +44,7 @@ export default class LndNode {
     });
   }
 
-  _onStarted() {
+  _setup() {
     const withoutMacaroon = true;
 
     return this.connect(withoutMacaroon)
@@ -46,14 +56,6 @@ export default class LndNode {
 
         throw error;
       });
-  }
-
-  _onUnlocked() {
-    return this.connect();
-  }
-
-  _onReady() {
-    return this.connectToPineHub();
   }
 
   stop() {
@@ -131,5 +133,6 @@ export default class LndNode {
   _onExit() {
     this.process.removeAllListeners();
     this.process = null;
+    this.eventEmitter.emit('exit');
   }
 }

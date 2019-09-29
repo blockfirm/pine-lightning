@@ -36,11 +36,13 @@ export default class LndNodeManager {
           rpcPort: port
         });
 
+        node.once('exit', this._onExit.bind(this, pineId));
         this.nodes[pineId] = node;
 
         return node.start();
       })
       .catch(error => {
+        this.stop(pineId);
         console.error('Unable to spawn lnd node:', error.message);
         throw new Error(`Unable to spawn lnd node: ${error.message}`);
       });
@@ -54,11 +56,19 @@ export default class LndNodeManager {
     const node = this.nodes[pineId];
 
     if (!node) {
-      return Promise.reject('No node was found with that Pine ID');
+      return Promise.resolve();
     }
 
-    return node.stop().then(() => {
-      this.nodes[pineId] = null;
-    });
+    return node.stop();
+  }
+
+  _onExit(pineId) {
+    const node = this.nodes[pineId];
+
+    if (node) {
+      node.removeAllListeners();
+    }
+
+    this.nodes[pineId] = null;
   }
 }

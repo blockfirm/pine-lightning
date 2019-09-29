@@ -55,8 +55,14 @@ export default class LndProcess {
   }
 
   kill() {
-    if (this.process) {
+    if (!this.process) {
+      return;
+    }
+
+    try {
       this.process.kill();
+    } catch (error) {
+      console.error('[LND PROCESS] Failed to stop process:', error.message);
     }
   }
 
