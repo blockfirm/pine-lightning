@@ -1,104 +1,41 @@
-import { spawn } from 'child_process';
 import path from 'path';
-import makeDir from 'make-dir';
 import createLnrpc from 'lnrpc';
+import LndProcess from './LndProcess';
 
 const WALLET_PASSWORD = 'timothy123';
 const DUMMY_SEED_MNEMONIC = 'abandon category occur glad square empower half chef door puzzle sauce begin coral text drive clarify always kid lizard piano dentist canyon practice together';
 
-const STATE_NOT_STARTED = 0;
-const STATE_STARTED = 1;
-const STATE_CREATING = 2;
-const STATE_UNLOCKED = 3;
-const STATE_READY = 4;
-
-const runCmd = (cmd, args, cwd) => {
-  const child = spawn(cmd, args, { cwd });
-
-  child.stdout.setEncoding('utf8');
-  child.stderr.setEncoding('utf8');
-
-  return child;
-};
-
 export default class LndNode {
   constructor(pineId, config) {
-    this.pineId = pineId;
     this.config = config;
-    this.state = STATE_NOT_STARTED;
-  }
-
-  getCwd() {
-    return path.join(this.config.cwdRoot, this.pineId);
-  }
-
-  preStart() {
-    return makeDir(this.getCwd());
+    this.process = new LndProcess(pineId, config);
   }
 
   start() {
     console.log('[LND] Starting node...');
 
-    return this.preStart().then(() => {
-      const { bin, server, rpcPort } = this.config;
-      const cwd = this.getCwd();
-
-      const args = [
-        ...this.config.args,
-        `--rpclisten=localhost:${rpcPort}`,
-        `--pine.id=${this.pineId}`,
-        `--pine.rpc=${server.host}:${server.port}`,
-        '--nolisten',
-        '--norest'
-      ];
-
-      this.process = runCmd(bin, args, cwd);
-
-      return this.postStart();
-    });
-  }
-
-  postStart() {
     return new Promise((resolve, reject) => {
-      this.process.stdout.on('data', (chunk) => {
-        console.log('[LND]', chunk);
-
-        if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
-          this._onStarted().catch(reject);
-        }
-
-        if (chunk.indexOf('LightningWallet opened') > -1) {
-          this._onUnlocked().catch(reject);
-        }
-
-        if (chunk.indexOf('Updating backup file') > -1) {
-          if (this.state !== STATE_READY) {
-            this._onReady().then(resolve).catch(reject);
-          }
-        }
+      this.process.once('started', () => {
+        this._onStarted().catch(reject);
       });
 
-      this.process.stderr.on('data', (chunk) => {
-        console.error('[LND] Error Output:', chunk);
-
-        if (this.state < STATE_STARTED) {
-          reject(new Error(chunk));
-        }
+      this.process.once('unlocked', () => {
+        this._onUnlocked().catch(reject);
       });
 
-      this.process.on('error', (error) => {
-        console.error('[LND] Process Error:', error.message);
-        reject(error);
+      this.process.once('ready', () => {
+        this._onReady().then(resolve).catch(reject);
       });
 
-      this.process.on('close', this._onShutdown.bind(this));
+      this.process.once('error', reject);
+      this.process.once('exit', this._onExit.bind(this));
+
+      this.process.start();
     });
   }
 
   _onStarted() {
     const withoutMacaroon = true;
-
-    this.state = STATE_STARTED;
 
     return this.connect(withoutMacaroon)
       .then(() => this.unlock())
@@ -112,12 +49,10 @@ export default class LndNode {
   }
 
   _onUnlocked() {
-    this.state = STATE_UNLOCKED;
     return this.connect();
   }
 
   _onReady() {
-    this.state = STATE_READY;
     return this.connectToPineHub();
   }
 
@@ -140,7 +75,7 @@ export default class LndNode {
 
   connect(withoutMacaroon) {
     const { adminMacaroon, rpcPort } = this.config;
-    const cwd = this.getCwd();
+    const cwd = this.process.cwd;
     const server = `localhost:${rpcPort}`;
     const macaroonPath = withoutMacaroon ? null : path.join(cwd, adminMacaroon);
 
@@ -166,7 +101,6 @@ export default class LndNode {
   }
 
   createWallet() {
-    this.state = STATE_CREATING;
     console.log('[LND] Creating wallet...');
 
     const options = {
@@ -194,9 +128,8 @@ export default class LndNode {
     return this.lnrpc.connectPeer(options);
   }
 
-  _onShutdown(code) {
+  _onExit() {
+    this.process.removeAllListeners();
     this.process = null;
-    this.lnrpc = null;
-    console.log('[LND] Node was shutdown with exit code', code);
   }
 }
