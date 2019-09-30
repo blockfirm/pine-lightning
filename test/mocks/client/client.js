@@ -1,3 +1,4 @@
+import fs from 'fs';
 import WebSocket from 'ws';
 import deserialize from '../../../src/deserialize';
 import methods from './methods';
@@ -13,7 +14,13 @@ export default class Client {
   connect() {
     this.disconnect();
 
-    this.websocket = new WebSocket(this.config.uri);
+    const { uri, certPath } = this.config;
+    const cert = fs.readFileSync(certPath);
+
+    this.websocket = new WebSocket(uri, {
+      ca: [cert],
+      cert
+    });
 
     this.websocket.on('open', this._onOpen.bind(this));
     this.websocket.on('close', this._onClose.bind(this));

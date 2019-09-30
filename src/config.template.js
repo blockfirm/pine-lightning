@@ -1,13 +1,16 @@
 const config = {
   servers: {
     client: {
-      proto: 'protos/client.proto',
-      host: '0.0.0.0',
-      port: 8911
+      host: 'localhost',
+      port: 8911,
+      tls: {
+        cert: 'certs/cert.pem',
+        key: 'certs/key.pem'
+      }
     },
     node: {
       proto: 'protos/node.proto',
-      host: '0.0.0.0',
+      host: 'localhost',
       port: 8910
     }
   },

@@ -1,16 +1,24 @@
-import http from 'http';
+import https from 'https';
 import events from 'events';
+import fs from 'fs';
 import WebSocket from 'ws';
 import uuidv4 from 'uuid/v4';
 import deserialize from '../deserialize';
 
 export default class ClientServer {
   constructor(config) {
+    const cert = fs.readFileSync(config.tls.cert);
+
     this.eventEmitter = new events.EventEmitter();
     this.clients = [];
     this.config = config;
 
-    this.server = http.createServer();
+    this.server = https.createServer({
+      key: fs.readFileSync(config.tls.key),
+      ca: [cert],
+      cert
+    });
+
     this.wss = new WebSocket.Server({ server: this.server });
 
     this.wss.on('connection', this._onClientConnect.bind(this));

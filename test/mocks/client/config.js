@@ -1,9 +1,10 @@
 const config = {
   bridge: {
-    uri: 'ws://127.0.0.1:1025/ws'
+    uri: 'wss://localhost:1025/ws',
+    certPath: '/home/timothy/pine-lightning/certs/cert.pem'
   },
   btcd: {
-    uri: 'wss://127.0.0.1:18556/ws',
+    uri: 'wss://localhost:18556/ws',
     username: 'LHb574e7pzDNhUIsTaJguQAw7iA',
     password: 'UZgaYSJwBgao2HCh+ywKNhBPOJA',
     certPath: '/home/timothy/.btcd/rpc.cert'

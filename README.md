@@ -7,6 +7,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 
 * [Dependencies](#dependencies)
 * [Getting started](#getting-started)
+* [Generate TLS certs](#generate-tls-certs)
 * [API](#api)
   * [Documentation](#documentation)
   * [Regenerate client](#regenerate-client)
@@ -48,6 +49,21 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
     $ npm run build
     $ npm start
     ```
+
+## Generate TLS certs
+
+The communication with the Pine app is encrypted using TLS.
+Before running the server for the first time you need to
+generate a private key and a certificate:
+
+```
+$ mkdir certs
+$ openssl genrsa -out key.pem 2048
+$ openssl req -new -key key.pem -out cert.csr
+$ openssl x509 -req -in cert.csr -signkey key.pem -out cert.pem
+```
+
+Then copy the `cert.pem` file to the client.
 
 ## API
 
