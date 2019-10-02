@@ -8,6 +8,17 @@ const config = {
         key: 'certs/key.pem'
       }
     },
+    session: {
+      host: 'localhost',
+      port: 1026,
+      rateLimit: {
+        burst: 2,
+        rate: 1,
+        ip: true, // Set to true if directly exposed to the internet.
+        xff: false, // Set to true if behind a reverse proxy or similar.
+        maxKeys: 100000
+      }
+    },
     node: {
       proto: 'protos/node.proto',
       host: 'localhost',

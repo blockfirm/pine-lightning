@@ -8,7 +8,18 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 * [Dependencies](#dependencies)
 * [Getting started](#getting-started)
 * [Generate TLS certs](#generate-tls-certs)
-* [API](#api)
+* [Client REST API](#client-rest-api)
+  * [Endpoints](#endpoints)
+  * [Error handling](#error-handling)
+  * [Authentication](#authentication-1)
+  * [Rate limiting](#rate-limiting-1)
+* [Client Websocket API](#client-websocket-api)
+  * [Server requests](#server-requests)
+  * [Client responses](#client-responses)
+  * [Server errors](#server-errors)
+  * [Authentication](#authentication-2)
+  * [Rate limiting](#rate-limiting-2)
+* [Node API](#node-api)
   * [Documentation](#documentation)
   * [Regenerate client](#regenerate-client)
 * [Testing](#testing)
@@ -22,7 +33,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 
 * [Node.js](https://nodejs.org) (`v12`) and [gRPC](https://grpc.io) for creating the RPC API
 * [Pine lnd](https://github.com/timothyej/lnd) as lightning node without private keys
-* [btcwallet](https://github.com/btcsuite/btcwallet) and [btcd](https://github.com/btcsuite/btcd) for mocking a wallet during development
+* [btcwallet](https://github.com/btcsuite/btcwallet) and [btcd](https://github.com/btcsuite/btcd) for mocking a wallet during development (*optional*)
 
 ## Getting started
 
@@ -65,10 +76,145 @@ $ openssl x509 -req -in cert.csr -signkey key.pem -out cert.pem
 
 Then copy the `cert.pem` file to the client.
 
-## API
+## Client REST API
 
-The API is a [gRPC](https://grpc.io) server that the customized lnd node is consuming in order
-to interact with the user's wallet to sign transactions and messages.
+The client REST API is an API used by the Pine app to start and end websocket sessions.
+
+### Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | [/v1/lightning/sessions](#get-v1lightningsessions) | Start a new session |
+| DELETE | [/v1/lightning/sessions/:sessionId](#delete-v1lightningsessionssessionid) | End a session |
+
+### `POST` /v1/lightning/sessions
+
+Returns a new session ID that can be used to open a websocket connection.
+Requires [authentication](#authentication).
+
+#### Returns
+
+Returns a JSON object containing the new session ID.
+
+| Name | Type | Description |
+| --- | --- | --- |
+| sessionId | *string* | A session ID that can be used to open a new websocket connection. |
+
+### `DELETE` /v1/lightning/sessions/:sessionId
+
+Ends an existing session. Requires [authentication](#authentication).
+
+#### Parameters
+
+| Name | Type | Description |
+| --- | --- | --- |
+| sessionId | *string* | ID of session to end. |
+
+### Error handling
+
+Errors are returned as JSON in the following format:
+
+```json
+{
+    "error": "<error message>"
+}
+```
+
+### Authentication
+
+See <https://github.com/blockfirm/pine-payment-server#authentication> for more information.
+
+### Rate limiting
+
+The REST API is rate limited to 1 request per second with bursts up to 2 requests. The rate limiting is
+based on the [Token Bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm and can be configured
+in `src/config.js` at `servers.session.rateLimit`.
+
+The limit is per IP number, so if your server is behind a reverse proxy or similar you must change the
+config to rate limit by the `X-Forwarded-For` header instead of the actual IP:
+
+```js
+rateLimit: {
+  ...
+  ip: false,
+  xff: true
+  ...
+}
+```
+
+## Client Websocket API
+
+The client websocket API is an API used by the Pine app in order to communicate with its
+lnd node.
+
+### Server requests
+
+Server requests are sent to the client as a JSON string with the following fields:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| id | *number* | A unique call ID. |
+| method | *string* | Name of method to call. Must be one of the defined methods in [rpc.proto](src/protos/rpc.proto), but starting with lowercase. |
+| request | *Object* | Request data to pass to the method. |
+
+### Client responses
+
+Client responses are sent as a response to a server request and should have the following JSON fields:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| id | *number* | The call ID to respond to. |
+| response | *Object* | Response data. |
+
+Errors should have the following format:
+
+| Name | Type | Description |
+| --- | --- | --- |
+| id | *number* | The call ID to respond to. |
+| error | *Object* | Error data. |
+| error.name | *string* | Optional error name. |
+| error.message | *string* | Description of the error. |
+
+### Server errors
+
+The server can send errors to the client that are not related to a particular method.
+Errors have the following JSON fields:
+
+| error | *Object* | Error data. |
+| error.name | *string* | Optional error name. |
+| error.message | *string* | Description of the error. |
+
+### Authentication
+
+The websocket API requires authentication by using HTTP Basic Authorization
+to provide the session ID and a signature of the session ID obtained from the
+client REST API, signed by the same user that requested the session ID.
+
+Set the `Authorization` header to the following:
+
+```
+Basic <credentials>
+```
+
+`<credentials>` must be replaced with a base64-encoded string of the session ID and a signature of the
+session ID:
+
+```
+base64('<sessionId>:<signature>')
+```
+
+The **signature** is a signature of the session ID using the user's private key
+(`secp256k1.sign(sha256(sha256(sessionId)), privateKey).toBase64()` with recovery).
+
+### Rate limiting
+
+TBD
+
+## Node API
+
+The node API is a gRPC API used by the customized lnd node to make requests to the
+Pine app through this proxy/bridge. Each RPC call will be passed on to the connected
+client through the client API websocket.
 
 ### Documentation
 

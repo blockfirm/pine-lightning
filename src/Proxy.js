@@ -1,4 +1,4 @@
-import { ClientServer, NodeServer } from './servers';
+import { ClientServer, NodeServer, SessionServer } from './servers';
 import LndNodeManager from './lnd/LndNodeManager';
 
 export default class Proxy {
@@ -6,7 +6,8 @@ export default class Proxy {
     this.config = config;
 
     this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
-    this.clientServer = new ClientServer(config.servers.client);
+    this.sessionServer = new SessionServer(config.servers.session);
+    this.clientServer = new ClientServer(config.servers.client, this.sessionServer.sessions);
     this.nodeServer = new NodeServer(config.servers.node);
 
     this.clientServer.on('connect', this._onClientConnect.bind(this));
@@ -16,8 +17,9 @@ export default class Proxy {
   }
 
   start() {
-    this.clientServer.start();
     this.nodeServer.start();
+    this.sessionServer.start();
+    this.clientServer.start();
   }
 
   _onClientConnect({ pineId }) {

@@ -1,5 +1,10 @@
 import fs from 'fs';
 import WebSocket from 'ws';
+import axios from 'axios';
+
+import getPineUserId from '../../../src/crypto/getPineUserId';
+import { getPineKeyPairFromMnemonic } from './crypto';
+import { getAuthorizationHeader } from './authentication';
 import deserialize from '../../../src/deserialize';
 import methods from './methods';
 
@@ -8,24 +13,33 @@ const ERROR_CODE_NORMAL_CLOSE = 1000;
 
 export default class Client {
   constructor(config) {
+    const { mnemonic } = config;
+
     this.config = config;
+    this.keyPair = getPineKeyPairFromMnemonic(mnemonic);
+    this.userId = getPineUserId(this.keyPair.publicKey);
   }
 
   connect() {
-    this.disconnect();
-
-    const { uri, certPath } = this.config;
+    const { uri, certPath } = this.config.bridge;
     const cert = fs.readFileSync(certPath);
 
-    this.websocket = new WebSocket(uri, {
-      ca: [cert],
-      cert
-    });
+    this.disconnect();
 
-    this.websocket.on('open', this._onOpen.bind(this));
-    this.websocket.on('close', this._onClose.bind(this));
-    this.websocket.on('error', this._onError.bind(this));
-    this.websocket.on('message', this._onMessage.bind(this));
+    return this._startSession().then(sessionId => {
+      this.websocket = new WebSocket(uri, {
+        headers: {
+          Authorization: this._getWebSocketAuthorizationHeader(sessionId)
+        },
+        ca: [cert],
+        cert
+      });
+
+      this.websocket.on('open', this._onOpen.bind(this));
+      this.websocket.on('close', this._onClose.bind(this));
+      this.websocket.on('error', this._onError.bind(this));
+      this.websocket.on('message', this._onMessage.bind(this));
+    });
   }
 
   disconnect() {
@@ -39,6 +53,31 @@ export default class Client {
     websocket.close();
 
     delete this.websocket;
+  }
+
+  _startSession() {
+    const baseUri = this.config.bridge.sessionBaseUri;
+    const endpoint = '/v1/lightning/sessions';
+
+    const headers = {
+      Authorization: this._getRestAuthorizationHeader(endpoint)
+    };
+
+    return axios.post(`${baseUri}${endpoint}`, null, { headers }).then(response => {
+      this.sessionId = response.data.sessionId;
+      console.log('[MOCK] Started new session: ', this.sessionId);
+      return this.sessionId;
+    });
+  }
+
+  _getRestAuthorizationHeader(endpoint) {
+    const { userId, keyPair } = this;
+    return getAuthorizationHeader(userId, endpoint, keyPair);
+  }
+
+  _getWebSocketAuthorizationHeader(sessionId) {
+    const { keyPair } = this;
+    return getAuthorizationHeader(sessionId, sessionId, keyPair);
   }
 
   _onOpen() {
@@ -86,7 +125,13 @@ export default class Client {
         this.websocket.send(JSON.stringify({ id, response }));
       })
       .catch(error => {
-        this.websocket.send(JSON.stringify({ id, error: error.message }));
+        this.websocket.send(JSON.stringify({
+          id,
+          error: {
+            name: error.name,
+            message: error.message
+          }
+        }));
       });
   }
 }

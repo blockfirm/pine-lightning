@@ -1,8 +1,10 @@
 import config from './config';
 import Client from './client';
 
-const client = new Client(config.bridge);
+const client = new Client(config);
 
-client.connect();
+client.connect().catch(error => {
+  console.error('[MOCK] Unable to connect to Pine Lightning:', error.message);
+});
 
 export default client;

@@ -68,6 +68,6 @@ export default class LndNodeManager {
       node.removeAllListeners();
     }
 
-    this.nodes[pineId] = null;
+    delete this.nodes[pineId];
   }
 }

@@ -2,16 +2,18 @@ import https from 'https';
 import events from 'events';
 import fs from 'fs';
 import WebSocket from 'ws';
-import uuidv4 from 'uuid/v4';
+
+import verifyPineSignature from '../crypto/verifyPineSignature';
 import deserialize from '../deserialize';
 
 export default class ClientServer {
-  constructor(config) {
+  constructor(config, sessions) {
     const cert = fs.readFileSync(config.tls.cert);
 
     this.eventEmitter = new events.EventEmitter();
-    this.clients = [];
+    this.clients = {};
     this.config = config;
+    this.sessions = sessions;
 
     this.server = https.createServer({
       key: fs.readFileSync(config.tls.key),
@@ -19,11 +21,12 @@ export default class ClientServer {
       cert
     });
 
-    this.wss = new WebSocket.Server({ server: this.server });
+    this.wss = new WebSocket.Server({ noServer: true });
 
     this.wss.on('connection', this._onClientConnect.bind(this));
     this.wss.on('close', this._onClose.bind(this));
     this.wss.on('error', this._onError.bind(this));
+    this.server.on('upgrade', this._onUpgrade.bind(this));
   }
 
   start() {
@@ -73,9 +76,52 @@ export default class ClientServer {
     this.eventEmitter.on(event, listener);
   }
 
-  _onClientConnect(ws) {
-    const pineId = uuidv4();
+  _authenticateRequest(request) {
+    const authorization = request.headers.authorization;
 
+    if (!authorization) {
+      throw new Error('Authorization header is missing');
+    }
+
+    const [type, token] = authorization.split(' ');
+
+    if (type !== 'Basic' || !token) {
+      throw new Error('Invalid authorization type');
+    }
+
+    const credentials = Buffer.from(token, 'base64').toString();
+    const [sessionId, signature] = credentials.split(':');
+
+    if (!sessionId || !signature) {
+      throw new Error('Missing basic authorization credentials');
+    }
+
+    const pineId = this.sessions[sessionId];
+    const isVerified = pineId && verifyPineSignature(sessionId, signature, pineId);
+
+    if (!isVerified) {
+      throw new Error('Invalid session ID or signature');
+    }
+
+    return pineId;
+  }
+
+  _onUpgrade(request, socket, head) {
+    let pineId;
+
+    try {
+      pineId = this._authenticateRequest(request);
+    } catch (error) {
+      console.error('[CLIENT] Client authentication failed:', error.message);
+      return socket.destroy();
+    }
+
+    this.wss.handleUpgrade(request, socket, head, (ws) => {
+      this.wss.emit('connection', ws, request, pineId);
+    });
+  }
+
+  _onClientConnect(ws, request, pineId) {
     delete this.clients[pineId];
     this.clients[pineId] = ws;
 
@@ -87,12 +133,13 @@ export default class ClientServer {
     ws.on('close', this._onClientDisconnect.bind(this, ws));
 
     this.eventEmitter.emit('connect', ws);
-    console.log('[CLIENT] New client connected');
+    console.log(`[CLIENT] ${pineId} connected`);
   }
 
   _onClientDisconnect(ws) {
     delete this.clients[ws.pineId];
     this.eventEmitter.emit('disconnect', ws);
+    console.log(`[CLIENT] ${ws.pineId} disconnected`);
   }
 
   _onClose() {
@@ -120,7 +167,7 @@ export default class ClientServer {
     }
 
     if (error) {
-      callback(new Error(error));
+      callback(new Error(error.message));
     } else {
       callback(null, response);
     }
