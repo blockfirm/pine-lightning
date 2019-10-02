@@ -21,7 +21,10 @@ export default class ClientServer {
       cert
     });
 
-    this.wss = new WebSocket.Server({ noServer: true });
+    this.wss = new WebSocket.Server({
+      maxPayload: config.maxPayload,
+      noServer: true
+    });
 
     this.wss.on('connection', this._onClientConnect.bind(this));
     this.wss.on('close', this._onClose.bind(this));

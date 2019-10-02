@@ -6,7 +6,8 @@ const config = {
       tls: {
         cert: 'certs/cert.pem',
         key: 'certs/key.pem'
-      }
+      },
+      maxPayload: 100000 // 100k
     },
     session: {
       host: 'localhost',
