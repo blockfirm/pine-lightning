@@ -2,10 +2,11 @@ import fs from 'fs';
 import WebSocket from 'ws';
 import axios from 'axios';
 
+import { deserializeClientMessage } from '../../../src/serializers';
 import getPineUserId from '../../../src/crypto/getPineUserId';
 import { getPineKeyPairFromMnemonic } from './crypto';
 import { getAuthorizationHeader } from './authentication';
-import deserializeClientMessage from '../../../src/deserializeClientMessage';
+import { serializeResponse } from './serializers';
 import methods from './methods';
 
 const RECONNECT_INTERVAL = 1000;
@@ -104,7 +105,9 @@ export default class Client {
     try {
       serverRequest = deserializeClientMessage(message);
     } catch (error) {
-      return this.websocket.send(JSON.stringify({ error: 'Malformed request' }));
+      return this.websocket.send(
+        serializeResponse({ id: 0, error: new Error('Malformed request') })
+      );
     }
 
     if (serverRequest.error) {
@@ -116,22 +119,19 @@ export default class Client {
     const { id, method, request } = serverRequest;
 
     if (!methods[method]) {
-      this.websocket.send(JSON.stringify({ id, error: 'Invalid method' }));
+      this.websocket.send(serializeResponse({
+        id, error: new Error('Invalid method')
+      }));
+
       return console.error('[MOCK] Invalid method', method);
     }
 
     methods[method](request)
       .then(response => {
-        this.websocket.send(JSON.stringify({ id, response }));
+        this.websocket.send(serializeResponse({ id, response }));
       })
       .catch(error => {
-        this.websocket.send(JSON.stringify({
-          id,
-          error: {
-            name: error.name,
-            message: error.message
-          }
-        }));
+        this.websocket.send(serializeResponse({ id, error }));
       });
   }
 }

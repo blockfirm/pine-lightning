@@ -4,8 +4,8 @@ import fs from 'fs';
 import WebSocket from 'ws';
 
 import verifyPineSignature from '../crypto/verifyPineSignature';
-import deserializeClientMessage from '../deserializeClientMessage';
-import validateClientMessage from '../validateClientMessage';
+import { deserializeClientMessage, serializeError } from '../serializers';
+import { validateClientMessage } from '../validators';
 
 export default class ClientServer {
   constructor(config, sessions) {
@@ -66,14 +66,7 @@ export default class ClientServer {
       throw Error('Client is not connected');
     }
 
-    const data = JSON.stringify({
-      error: {
-        name: error.name,
-        message: error.message
-      }
-    });
-
-    client.send(data);
+    client.send(serializeError(error));
   }
 
   on(event, listener) {
@@ -130,7 +123,7 @@ export default class ClientServer {
     this.clients[pineId] = ws;
 
     ws.pineId = pineId;
-    ws.callCounter = ws.callCounter || 0;
+    ws.callCounter = ws.callCounter || 1;
     ws.callbacks = ws.callbacks || {};
 
     ws.on('message', this._onClientMessage.bind(this, ws));
