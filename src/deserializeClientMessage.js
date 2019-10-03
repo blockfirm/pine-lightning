@@ -1,4 +1,4 @@
-const deserialize = (message) => {
+const deserializeClientMessage = (message) => {
   try {
     return JSON.parse(message, (key, value) => {
       if (value && typeof value === 'object') {
@@ -14,5 +14,5 @@ const deserialize = (message) => {
   }
 };
 
-export default deserialize;
+export default deserializeClientMessage;
 

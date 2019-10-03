@@ -5,7 +5,7 @@ import axios from 'axios';
 import getPineUserId from '../../../src/crypto/getPineUserId';
 import { getPineKeyPairFromMnemonic } from './crypto';
 import { getAuthorizationHeader } from './authentication';
-import deserialize from '../../../src/deserialize';
+import deserializeClientMessage from '../../../src/deserializeClientMessage';
 import methods from './methods';
 
 const RECONNECT_INTERVAL = 1000;
@@ -102,7 +102,7 @@ export default class Client {
     let serverRequest;
 
     try {
-      serverRequest = deserialize(message);
+      serverRequest = deserializeClientMessage(message);
     } catch (error) {
       return this.websocket.send(JSON.stringify({ error: 'Malformed request' }));
     }

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@grpc/proto-loader": "^0.5.2",
+    "@hapi/joi": "^16.1.5",
     "bip32": "^2.0.4",
     "bip39": "^3.0.2",
     "bip66": "^1.1.5",

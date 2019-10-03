@@ -4,7 +4,8 @@ import fs from 'fs';
 import WebSocket from 'ws';
 
 import verifyPineSignature from '../crypto/verifyPineSignature';
-import deserialize from '../deserialize';
+import deserializeClientMessage from '../deserializeClientMessage';
+import validateClientMessage from '../validateClientMessage';
 
 export default class ClientServer {
   constructor(config, sessions) {
@@ -157,7 +158,8 @@ export default class ClientServer {
     let deserialized;
 
     try {
-      deserialized = deserialize(message);
+      deserialized = deserializeClientMessage(message);
+      deserialized = validateClientMessage(deserialized);
     } catch (error) {
       return console.error('[CLIENT] Error when parsing message:', error.message);
     }
