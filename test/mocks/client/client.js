@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import axios from 'axios';
 
 import { deserializeClientMessage } from '../../../src/serializers';
-import getPineUserId from '../../../src/crypto/getPineUserId';
+import { getPineUserId } from '../../../src/crypto';
 import { getPineKeyPairFromMnemonic } from './crypto';
 import { getAuthorizationHeader } from './authentication';
 import { serializeResponse } from './serializers';

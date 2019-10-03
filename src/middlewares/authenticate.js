@@ -1,5 +1,5 @@
 import errors from 'restify-errors';
-import verifyPineSignature from '../crypto/verifyPineSignature';
+import { verifyPineSignature } from '../crypto';
 
 const authenticate = function authenticate(request, _response, next) {
   if (!request.authorization || !request.authorization.basic) {

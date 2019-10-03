@@ -3,7 +3,7 @@ import events from 'events';
 import fs from 'fs';
 import WebSocket from 'ws';
 
-import verifyPineSignature from '../crypto/verifyPineSignature';
+import { verifyPineSignature } from '../crypto';
 import { deserializeClientMessage, serializeError } from '../serializers';
 import { validateClientMessage } from '../validators';
 
