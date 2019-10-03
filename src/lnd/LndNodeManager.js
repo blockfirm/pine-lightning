@@ -61,6 +61,11 @@ export default class LndNodeManager {
     return node.stop();
   }
 
+  stopAll() {
+    const promises = Object.keys(this.nodes).map(pineId => this.stop(pineId));
+    return Promise.all(promises);
+  }
+
   _onExit(pineId) {
     const node = this.nodes[pineId];
 
