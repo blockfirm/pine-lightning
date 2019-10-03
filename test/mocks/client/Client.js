@@ -1,4 +1,3 @@
-import fs from 'fs';
 import events from 'events';
 import WebSocket from 'ws';
 import axios from 'axios';
@@ -25,8 +24,7 @@ export default class Client extends events.EventEmitter {
   }
 
   connect() {
-    const { uri, certPath } = this.config.bridge;
-    const cert = fs.readFileSync(certPath);
+    const { uri } = this.config.bridge;
 
     this.disconnect();
 
@@ -34,9 +32,7 @@ export default class Client extends events.EventEmitter {
       this.websocket = new WebSocket(uri, {
         headers: {
           Authorization: this._getWebSocketAuthorizationHeader(sessionId)
-        },
-        ca: [cert],
-        cert
+        }
       });
 
       this.websocket.on('open', this._onOpen.bind(this));

@@ -3,10 +3,6 @@ const config = {
     client: {
       host: 'localhost',
       port: 8911,
-      tls: {
-        cert: 'certs/cert.pem',
-        key: 'certs/key.pem'
-      },
       rateLimit: {
         messages: 50, // Amount of messages per interval for each connected client.
         interval: 'minute' // 'second', 'minute', 'hour', 'day', or a number of milliseconds.

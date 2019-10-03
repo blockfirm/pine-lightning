@@ -1,7 +1,6 @@
 const config = {
   bridge: {
-    uri: 'wss://localhost:1025/ws',
-    certPath: '/home/timothy/pine-lightning/certs/cert.pem',
+    uri: 'ws://localhost:1025/ws',
     sessionBaseUri: 'http://localhost:1026'
   },
   btcd: {

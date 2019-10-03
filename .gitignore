@@ -19,6 +19,3 @@ src/config.js
 # Vim swap files
 *.swp
 *.swo
-
-# TLS certs
-certs/

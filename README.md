@@ -7,7 +7,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 
 * [Dependencies](#dependencies)
 * [Getting started](#getting-started)
-* [Generate TLS certs](#generate-tls-certs)
+* [Configure SSL](#configure-ssl)
 * [Client REST API](#client-rest-api)
   * [Endpoints](#endpoints)
   * [Error handling](#error-handling)
@@ -61,20 +61,15 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
     $ npm start
     ```
 
-## Generate TLS certs
+## Configure SSL
 
-The communication with the Pine app is encrypted using TLS.
-Before running the server for the first time you need to
-generate a private key and a certificate:
+The Pine Payment Protocol requires all servers to be configured with SSL (HTTPS). The server
+doesn't directly support that so instead you need to setup a reverse proxy such as [nginx](https://www.nginx.com)
+and terminate there before forwarding to this server. The easiest way to obtain an SSL
+certificate is by using [Let's Encrypt](https://letsencrypt.org).
 
-```
-$ mkdir certs
-$ openssl genrsa -out key.pem 2048
-$ openssl req -new -key key.pem -out cert.csr
-$ openssl x509 -req -in cert.csr -signkey key.pem -out cert.pem
-```
-
-Then copy the `cert.pem` file to the client.
+For information on how to proxy WebSocket traffic with nginx, see
+<http://nginx.org/en/docs/http/websocket.html>.
 
 ## Client REST API
 

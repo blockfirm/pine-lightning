@@ -1,6 +1,5 @@
-import https from 'https';
+import http from 'http';
 import events from 'events';
-import fs from 'fs';
 import WebSocket from 'ws';
 import { RateLimiter } from 'limiter';
 
@@ -12,17 +11,10 @@ export default class ClientServer extends events.EventEmitter {
   constructor(config, sessions) {
     super();
 
-    const cert = fs.readFileSync(config.tls.cert);
-
     this.clients = {};
     this.config = config;
     this.sessions = sessions;
-
-    this.server = https.createServer({
-      key: fs.readFileSync(config.tls.key),
-      ca: [cert],
-      cert
-    });
+    this.server = http.createServer();
 
     this.wss = new WebSocket.Server({
       maxPayload: config.maxPayload,
