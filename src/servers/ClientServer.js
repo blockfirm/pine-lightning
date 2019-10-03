@@ -40,6 +40,11 @@ export default class ClientServer extends events.EventEmitter {
     console.log(`[CLIENT] Server listening at ${host}:${port}`);
   }
 
+  stop() {
+    this.server.close();
+    console.log('[CLIENT] Server was stopped');
+  }
+
   // eslint-disable-next-line max-params
   sendRequest(pineId, methodName, request, callback) {
     const client = this.clients[pineId];

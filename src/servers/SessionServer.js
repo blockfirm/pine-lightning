@@ -27,6 +27,11 @@ export default class SessionServer {
     });
   }
 
+  stop() {
+    this.server.close();
+    console.log('[SESSION] Server was stopped');
+  }
+
   _startSession(request, response, next) {
     if (!request.userId) {
       return next(

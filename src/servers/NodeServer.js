@@ -54,6 +54,11 @@ export default class NodeServer extends events.EventEmitter {
     console.log(`[NODE] Server listening at ${host}:${port}`);
   }
 
+  stop() {
+    this.server.forceShutdown();
+    console.log('[NODE] Server was stopped');
+  }
+
   _handleCall(methodName, call, callback) {
     const { request } = call;
     const pineId = call.metadata.get('pine-id')[0];
