@@ -22,6 +22,14 @@ export default class Proxy {
     this.clientServer.start();
   }
 
+  stop() {
+    this.clientServer.stop();
+    this.sessionServer.stop();
+    this.nodeServer.stop();
+
+    return this.lndNodeManager.stopAll();
+  }
+
   _onClientConnect({ pineId }) {
     this.lndNodeManager.spawn(pineId)
       .catch(error => {
