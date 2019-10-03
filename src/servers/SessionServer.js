@@ -1,7 +1,7 @@
 import restify from 'restify';
 import errors from 'restify-errors';
 import uuidv4 from 'uuid/v4';
-import authenticate from '../middlewares/authenticate';
+import { authenticate } from '../middlewares';
 
 export default class SessionServer {
   constructor(config) {
