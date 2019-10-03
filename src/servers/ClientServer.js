@@ -2,6 +2,7 @@ import https from 'https';
 import events from 'events';
 import fs from 'fs';
 import WebSocket from 'ws';
+import { RateLimiter } from 'limiter';
 
 import { verifyPineSignature } from '../crypto';
 import { deserializeClientMessage, serializeError } from '../serializers';
@@ -121,14 +122,28 @@ export default class ClientServer extends events.EventEmitter {
   }
 
   _onClientConnect(ws, request, pineId) {
-    delete this.clients[pineId];
+    const { rateLimit } = this.config;
+
+    const limiter = new RateLimiter(
+      rateLimit.messages, rateLimit.interval, true
+    );
+
     this.clients[pineId] = ws;
 
     ws.pineId = pineId;
     ws.callCounter = ws.callCounter || 1;
     ws.callbacks = ws.callbacks || {};
 
-    ws.on('message', this._onClientMessage.bind(this, ws));
+    ws.on('message', (message) => {
+      limiter.removeTokens(1, (error, remainingRequests) => {
+        if (error || remainingRequests < 1) {
+          console.error(`[CLIENT] ${pineId} has reached its rate limit`);
+        } else {
+          this._onClientMessage(ws, message);
+        }
+      });
+    });
+
     ws.on('close', this._onClientDisconnect.bind(this, ws));
 
     this.emit('connect', ws);

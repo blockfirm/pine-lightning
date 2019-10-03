@@ -208,7 +208,8 @@ The **signature** is a signature of the session ID using the user's private key
 
 ### Rate limiting
 
-TBD
+The websocket API is rate limited for each connected client. Each client can by default
+send 50 messages per minute unless otherwise configured in the config file.
 
 ## Node API
 
