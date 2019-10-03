@@ -30,7 +30,6 @@ export default class ClientServer extends events.EventEmitter {
     });
 
     this.wss.on('connection', this._onClientConnect.bind(this));
-    this.wss.on('close', this._onClose.bind(this));
     this.wss.on('error', this._onError.bind(this));
     this.server.on('upgrade', this._onUpgrade.bind(this));
   }
@@ -43,6 +42,9 @@ export default class ClientServer extends events.EventEmitter {
 
   stop() {
     this.server.close();
+    this.server.removeAllListeners();
+    this.wss.removeAllListeners();
+
     console.log('[CLIENT] Server was stopped');
   }
 
@@ -152,12 +154,9 @@ export default class ClientServer extends events.EventEmitter {
 
   _onClientDisconnect(ws) {
     delete this.clients[ws.pineId];
+    ws.removeAllListeners();
     this.emit('disconnect', ws);
     console.log(`[CLIENT] ${ws.pineId} disconnected`);
-  }
-
-  _onClose() {
-    console.log('[CLIENT] Server stopped listening');
   }
 
   _onError(error) {

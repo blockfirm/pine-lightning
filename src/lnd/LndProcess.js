@@ -105,6 +105,8 @@ export default class LndProcess extends events.EventEmitter {
   }
 
   _onExit(code) {
+    this.process.stdout.removeAllListeners();
+    this.process.stderr.removeAllListeners();
     this.process.removeAllListeners();
     this.process = null;
     this.state = STATE_NOT_STARTED;
