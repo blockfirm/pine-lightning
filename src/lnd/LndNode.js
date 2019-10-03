@@ -6,19 +6,11 @@ import LndProcess from './LndProcess';
 const WALLET_PASSWORD = 'timothy123';
 const DUMMY_SEED_MNEMONIC = 'abandon category occur glad square empower half chef door puzzle sauce begin coral text drive clarify always kid lizard piano dentist canyon practice together';
 
-export default class LndNode {
+export default class LndNode extends events.EventEmitter {
   constructor(pineId, config) {
+    super();
     this.config = config;
     this.process = new LndProcess(pineId, config);
-    this.eventEmitter = new events.EventEmitter();
-  }
-
-  once(event, listener) {
-    this.eventEmitter.once(event, listener);
-  }
-
-  removeAllListeners() {
-    this.eventEmitter.removeAllListeners();
   }
 
   start() {
@@ -133,6 +125,6 @@ export default class LndNode {
   _onExit() {
     this.process.removeAllListeners();
     this.process = null;
-    this.eventEmitter.emit('exit');
+    this.emit('exit');
   }
 }

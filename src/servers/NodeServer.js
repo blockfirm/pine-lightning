@@ -16,8 +16,10 @@ const getMethodsFromService = (service, handler) => {
   return methods;
 };
 
-export default class NodeServer {
+export default class NodeServer extends events.EventEmitter {
   constructor(config) {
+    super();
+
     const { proto, host, port } = config;
 
     const packageDefinition = protoLoader.loadSync(
@@ -42,7 +44,6 @@ export default class NodeServer {
     server.addService(Pine.service, methods);
     server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
-    this.eventEmitter = new events.EventEmitter();
     this.server = server;
     this.config = config;
   }
@@ -53,10 +54,6 @@ export default class NodeServer {
     console.log(`[NODE] Server listening at ${host}:${port}`);
   }
 
-  on(event, listener) {
-    this.eventEmitter.on(event, listener);
-  }
-
   _handleCall(methodName, call, callback) {
     const { request } = call;
     const pineId = call.metadata.get('pine-id')[0];
@@ -65,7 +62,7 @@ export default class NodeServer {
       return callback(new Error('RPC call is missing Pine ID'));
     }
 
-    this.eventEmitter.emit('request', {
+    this.emit('request', {
       pineId,
       methodName,
       request,

@@ -7,11 +7,12 @@ import { verifyPineSignature } from '../crypto';
 import { deserializeClientMessage, serializeError } from '../serializers';
 import { validateClientMessage } from '../validators';
 
-export default class ClientServer {
+export default class ClientServer extends events.EventEmitter {
   constructor(config, sessions) {
+    super();
+
     const cert = fs.readFileSync(config.tls.cert);
 
-    this.eventEmitter = new events.EventEmitter();
     this.clients = {};
     this.config = config;
     this.sessions = sessions;
@@ -67,10 +68,6 @@ export default class ClientServer {
     }
 
     client.send(serializeError(error));
-  }
-
-  on(event, listener) {
-    this.eventEmitter.on(event, listener);
   }
 
   _authenticateRequest(request) {
@@ -129,13 +126,13 @@ export default class ClientServer {
     ws.on('message', this._onClientMessage.bind(this, ws));
     ws.on('close', this._onClientDisconnect.bind(this, ws));
 
-    this.eventEmitter.emit('connect', ws);
+    this.emit('connect', ws);
     console.log(`[CLIENT] ${pineId} connected`);
   }
 
   _onClientDisconnect(ws) {
     delete this.clients[ws.pineId];
-    this.eventEmitter.emit('disconnect', ws);
+    this.emit('disconnect', ws);
     console.log(`[CLIENT] ${ws.pineId} disconnected`);
   }
 

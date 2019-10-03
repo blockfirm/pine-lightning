@@ -17,22 +17,14 @@ const runCmd = (cmd, args, cwd) => {
   return child;
 };
 
-export default class LndProcess {
+export default class LndProcess extends events.EventEmitter {
   constructor(pineId, config) {
+    super();
+
     this.pineId = pineId;
     this.config = config;
     this.state = STATE_NOT_STARTED;
-
     this.cwd = this._getCwd();
-    this.eventEmitter = new events.EventEmitter();
-  }
-
-  once(event, listener) {
-    this.eventEmitter.once(event, listener);
-  }
-
-  removeAllListeners() {
-    this.eventEmitter.removeAllListeners();
   }
 
   start() {
@@ -80,18 +72,18 @@ export default class LndProcess {
 
       if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
         this.state = STATE_STARTED;
-        this.eventEmitter.emit('started');
+        this.emit('started');
       }
 
       if (chunk.indexOf('LightningWallet opened') > -1) {
         this.state = STATE_UNLOCKED;
-        this.eventEmitter.emit('unlocked');
+        this.emit('unlocked');
       }
 
       if (chunk.indexOf('Updating backup file') > -1) {
         if (this.state !== STATE_READY) {
           this.state = STATE_READY;
-          this.eventEmitter.emit('ready');
+          this.emit('ready');
         }
       }
     });
@@ -100,13 +92,13 @@ export default class LndProcess {
       console.error('[LND ERROR]', chunk);
 
       if (this.state < STATE_STARTED) {
-        this.eventEmitter.emit('error', new Error(chunk));
+        this.emit('error', new Error(chunk));
       }
     });
 
     this.process.on('error', (error) => {
       console.error('[LND ERROR]', error.message);
-      this.eventEmitter.emit('error', error);
+      this.emit('error', error);
     });
 
     this.process.on('exit', this._onExit.bind(this));
@@ -116,7 +108,7 @@ export default class LndProcess {
     this.process.removeAllListeners();
     this.process = null;
     this.state = STATE_NOT_STARTED;
-    this.eventEmitter.emit('exit', code);
+    this.emit('exit', code);
 
     console.log('[LND] Node was shutdown with exit code', code);
   }
