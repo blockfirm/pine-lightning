@@ -244,6 +244,8 @@ $ npm test
 ### Integration tests
 
 The integration tests test that the different APIs are working together as expected.
+They require that you have a testing environment set up with lnd, btcd, and btcwallet
+and that they are configurated to work together.
 
 To run the integration tests, run the following command:
 
