@@ -1,4 +1,5 @@
 import fs from 'fs';
+import events from 'events';
 import WebSocket from 'ws';
 import axios from 'axios';
 
@@ -12,9 +13,11 @@ import methods from './methods';
 const RECONNECT_INTERVAL = 1000;
 const ERROR_CODE_NORMAL_CLOSE = 1000;
 
-export default class Client {
+export default class Client extends events.EventEmitter {
   constructor(config) {
     const { mnemonic } = config;
+
+    super();
 
     this.config = config;
     this.keyPair = getPineKeyPairFromMnemonic(mnemonic);
@@ -97,6 +100,7 @@ export default class Client {
 
   _onError(error) {
     console.error(`[MOCK] ${error.name}: ${error.message}`);
+    this.emit('error', error);
   }
 
   _onMessage(message) {
@@ -105,6 +109,8 @@ export default class Client {
     try {
       serverRequest = deserializeClientMessage(message);
     } catch (error) {
+      this._onError(error);
+
       return this.websocket.send(
         serializeResponse({ id: 0, error: new Error('Malformed request') })
       );
@@ -119,19 +125,19 @@ export default class Client {
     const { id, method, request } = serverRequest;
 
     if (!methods[method]) {
-      this.websocket.send(serializeResponse({
-        id, error: new Error('Invalid method')
-      }));
-
-      return console.error('[MOCK] Invalid method', method);
+      const error = new Error('Invalid method');
+      this.websocket.send(serializeResponse({ id, error }));
+      return this._onError(error);
     }
 
     methods[method](request)
       .then(response => {
         this.websocket.send(serializeResponse({ id, response }));
+        this.emit('response', response);
       })
       .catch(error => {
         this.websocket.send(serializeResponse({ id, error }));
+        this._onError(error);
       });
   }
 }

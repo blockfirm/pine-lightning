@@ -1,5 +1,5 @@
 import config from './config';
-import Client from './client';
+import Client from './Client';
 
 const client = new Client(config);
 
