@@ -38,7 +38,8 @@ const config = {
     pineHub: {
       publicKey: '',
       host: 'localhost:10012'
-    }
+    },
+    idleTimeout: 5 // Shut down node after 5 minutes of inactivity.
   }
 };
 

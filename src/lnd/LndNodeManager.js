@@ -28,6 +28,11 @@ export default class LndNodeManager {
       return Promise.reject('Cannot start a node without a Pine ID');
     }
 
+    if (this.nodes[pineId]) {
+      clearTimeout(this.nodes[pineId].shutdownTimer);
+      return Promise.resolve();
+    }
+
     return getUnusedPort()
       .then(port => {
         const node = new LndNode(pineId, {
@@ -66,11 +71,25 @@ export default class LndNodeManager {
     return Promise.all(promises);
   }
 
+  idle(pineId) {
+    const { idleTimeout } = this.config;
+    const node = this.nodes[pineId];
+
+    if (!node) {
+      return;
+    }
+
+    node.shutdownTimer = setTimeout(() => {
+      this.stop(pineId);
+    }, idleTimeout * 60000);
+  }
+
   _onExit(pineId) {
     const node = this.nodes[pineId];
 
     if (node) {
       node.removeAllListeners();
+      clearTimeout(node.shutdownTimer);
     }
 
     delete this.nodes[pineId];

@@ -34,7 +34,7 @@ export default class Proxy {
     this.lndNodeManager.spawn(pineId)
       .catch(error => {
         console.error('[PROXY] Spawn Error:', error.message);
-        this.clientServer.sendError(pineId, error);
+        return this.clientServer.sendError(pineId, error);
       })
       .catch(error => {
         console.error('[PROXY] Send Error:', error.message);
@@ -42,9 +42,7 @@ export default class Proxy {
   }
 
   _onClientDisconnect({ pineId }) {
-    this.lndNodeManager.stop(pineId).catch(error => {
-      console.error('[PROXY] Failed to stop lnd node:', error.message);
-    });
+    this.lndNodeManager.idle(pineId);
   }
 
   _onNodeRequest({ pineId, methodName, request, callback }) {
