@@ -27,12 +27,21 @@ export default class ClientServer extends events.EventEmitter {
   }
 
   start() {
-    const { host, port } = this.config;
+    const { host, port, pingInterval } = this.config;
+
+    this._pingInterval = setInterval(
+      this._ping.bind(this),
+      pingInterval * 1000
+    );
+
     this.server.listen(port, host);
+
     console.log(`[CLIENT] Server listening at ${host}:${port}`);
   }
 
   stop() {
+    clearInterval(this._pingInterval);
+
     this.server.close();
     this.server.removeAllListeners();
     this.wss.removeAllListeners();
@@ -68,6 +77,19 @@ export default class ClientServer extends events.EventEmitter {
     }
 
     client.send(serializeError(error));
+  }
+
+  _ping() {
+    const { clients } = this;
+
+    Object.values(clients).forEach(ws => {
+      if (ws.isAlive === false) {
+        return ws.terminate();
+      }
+
+      ws.isAlive = false;
+      ws.ping(() => {});
+    });
   }
 
   _authenticateRequest(request) {
@@ -127,6 +149,11 @@ export default class ClientServer extends events.EventEmitter {
     ws.pineId = pineId;
     ws.callCounter = ws.callCounter || 1;
     ws.callbacks = ws.callbacks || {};
+    ws.isAlive = true;
+
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
 
     ws.on('message', (message) => {
       limiter.removeTokens(1, (error, remainingRequests) => {

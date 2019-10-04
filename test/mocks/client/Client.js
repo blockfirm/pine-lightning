@@ -39,6 +39,7 @@ export default class Client extends events.EventEmitter {
       this.websocket.on('close', this._onClose.bind(this));
       this.websocket.on('error', this._onError.bind(this));
       this.websocket.on('message', this._onMessage.bind(this));
+      this.websocket.on('ping', this._onPing.bind(this));
     });
   }
 
@@ -82,9 +83,12 @@ export default class Client extends events.EventEmitter {
 
   _onOpen() {
     console.log('[MOCK] Connected');
+    this._onPing();
   }
 
   _onClose(code) {
+    clearTimeout(this._pingTimeout);
+
     if (code === ERROR_CODE_NORMAL_CLOSE) {
       return console.log('[MOCK] Disconnected');
     }
@@ -135,5 +139,19 @@ export default class Client extends events.EventEmitter {
         this.websocket.send(serializeResponse({ id, error }));
         this._onError(error);
       });
+  }
+
+  _onPing() {
+    const { pingInterval } = this.config.bridge;
+    clearTimeout(this._pingTimeout);
+
+    /**
+     * Assume the connection is dead if no ping
+     * has been received within the ping inter-
+     * val + some assumption of latency.
+     */
+    this._pingTimeout = setTimeout(() => {
+      this.websocket.terminate();
+    }, pingInterval * 1000 + 2000);
   }
 }

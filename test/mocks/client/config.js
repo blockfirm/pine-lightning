@@ -1,7 +1,8 @@
 const config = {
   bridge: {
     uri: 'ws://localhost:1025/ws',
-    sessionBaseUri: 'http://localhost:1026'
+    sessionBaseUri: 'http://localhost:1026',
+    pingInterval: 30 // Expect a ping from server every 30 seconds.
   },
   btcd: {
     uri: 'wss://localhost:18556/ws',
