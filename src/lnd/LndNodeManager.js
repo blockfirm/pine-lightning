@@ -79,6 +79,10 @@ export default class LndNodeManager {
       return;
     }
 
+    if (!node.isReady()) {
+      return this.stop(pineId);
+    }
+
     node.shutdownTimer = setTimeout(() => {
       this.stop(pineId);
     }, idleTimeout * 60000);

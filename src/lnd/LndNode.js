@@ -122,6 +122,10 @@ export default class LndNode extends events.EventEmitter {
     return this.lnrpc.connectPeer(options);
   }
 
+  isReady() {
+    return this.process.isReady();
+  }
+
   _onExit() {
     this.process.removeAllListeners();
     this.process = null;

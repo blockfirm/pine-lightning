@@ -58,6 +58,10 @@ export default class LndProcess extends events.EventEmitter {
     }
   }
 
+  isReady() {
+    return this.state === STATE_READY;
+  }
+
   _getCwd() {
     return path.join(this.config.cwdRoot, this.pineId);
   }
