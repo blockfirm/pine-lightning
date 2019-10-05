@@ -119,7 +119,11 @@ export default class LndNode extends events.EventEmitter {
       perm: true
     };
 
-    return this.lnrpc.connectPeer(options);
+    return this.lnrpc.connectPeer(options).catch(error => {
+      if (!error.message.includes('already connected')) {
+        throw error;
+      }
+    });
   }
 
   isReady() {

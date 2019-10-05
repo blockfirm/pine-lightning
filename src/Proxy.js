@@ -1,5 +1,6 @@
 import { ClientServer, NodeServer, SessionServer } from './servers';
 import LndNodeManager from './lnd/LndNodeManager';
+import methods from './methods';
 
 export default class Proxy {
   constructor(config) {
@@ -12,6 +13,7 @@ export default class Proxy {
 
     this.clientServer.on('connect', this._onClientConnect.bind(this));
     this.clientServer.on('disconnect', this._onClientDisconnect.bind(this));
+    this.clientServer.on('request', this._onClientRequest.bind(this));
 
     this.nodeServer.on('request', this._onNodeRequest.bind(this));
   }
@@ -34,7 +36,7 @@ export default class Proxy {
     this.lndNodeManager.spawn(pineId)
       .catch(error => {
         console.error('[PROXY] Spawn Error:', error.message);
-        return this.clientServer.sendError(pineId, error);
+        return this.clientServer.sendError(pineId, 0, error);
       })
       .catch(error => {
         console.error('[PROXY] Send Error:', error.message);
@@ -43,6 +45,24 @@ export default class Proxy {
 
   _onClientDisconnect({ pineId }) {
     this.lndNodeManager.idle(pineId);
+  }
+
+  _onClientRequest({ pineId, methodName, request, callId }) {
+    const method = methods[methodName];
+
+    if (!method) {
+      this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
+    }
+
+    const lnd = this.lndNodeManager.getNodeByPineId(pineId);
+
+    method({ request, lnd })
+      .then(response => {
+        this.clientServer.sendResponse(pineId, callId, response);
+      })
+      .catch(error => {
+        this.clientServer.sendError(pineId, callId, error);
+      });
   }
 
   _onNodeRequest({ pineId, methodName, request, callback }) {

@@ -2,11 +2,15 @@ import events from 'events';
 import WebSocket from 'ws';
 import axios from 'axios';
 
-import { deserializeClientMessage } from '../../../src/serializers';
+import {
+  deserializeClientMessage,
+  serializeResponse,
+  serializeRequest
+} from '../../../src/serializers';
+
 import { getPineUserId } from '../../../src/crypto';
 import { getPineKeyPairFromMnemonic } from './crypto';
 import { getAuthorizationHeader } from './authentication';
-import { serializeResponse } from './serializers';
 import methods from './methods';
 
 const RECONNECT_INTERVAL = 1000;
@@ -21,6 +25,9 @@ export default class Client extends events.EventEmitter {
     this.config = config;
     this.keyPair = getPineKeyPairFromMnemonic(mnemonic);
     this.userId = getPineUserId(this.keyPair.publicKey);
+
+    this.callCounter = 1;
+    this.callbacks = {};
   }
 
   connect() {
@@ -54,6 +61,39 @@ export default class Client extends events.EventEmitter {
     websocket.close();
 
     delete this.websocket;
+  }
+
+  sendRequest(methodName, request, callback) {
+    const callId = this.callCounter++;
+
+    const data = serializeRequest({
+      id: callId,
+      method: methodName,
+      request
+    });
+
+    this.callbacks[callId] = callback;
+    this.websocket.send(data);
+  }
+
+  sendResponse(callId, response, error) {
+    this.websocket.send(serializeResponse({ id: callId, response, error }));
+  }
+
+  sendError(callId, error) {
+    return this.sendResponse(callId, null, error);
+  }
+
+  openChannel(pubkey) {
+    return new Promise((resolve, reject) => {
+      this.sendRequest('openChannel', { pubkey }, (error, response) => {
+        if (error) {
+          return reject(error);
+        }
+
+        resolve(response);
+      });
+    });
   }
 
   _startSession() {
@@ -103,42 +143,72 @@ export default class Client extends events.EventEmitter {
     this.emit('error', error);
   }
 
-  _onMessage(message) {
-    let serverRequest;
-
-    try {
-      serverRequest = deserializeClientMessage(message);
-    } catch (error) {
-      this._onError(error);
-
-      return this.websocket.send(
-        serializeResponse({ id: 0, error: new Error('Malformed request') })
-      );
+  _handleErrorMessage(errorMessage) {
+    if (errorMessage.id) {
+      return this._handleResponseMessage(errorMessage);
     }
 
-    if (serverRequest.error) {
-      const error = new Error(serverRequest.error.message);
-      error.name = serverRequest.error.name;
-      return this._onError(error);
+    const error = new Error(errorMessage.error.message);
+    error.name = errorMessage.error.name;
+    return this._onError(error);
+  }
+
+  _handleResponseMessage(responseMessage) {
+    const { id, response, error } = responseMessage;
+    const callback = this.callbacks[id];
+
+    if (!callback) {
+      return console.error('[MOCK] No callback found for call');
     }
 
-    const { id, method, request } = serverRequest;
+    if (error) {
+      callback(new Error(error.message));
+    } else {
+      callback(null, response);
+    }
+
+    delete this.callbacks[id];
+  }
+
+  _handleRequestMessage(requestMessage) {
+    const { id, method, request } = requestMessage;
 
     if (!methods[method]) {
       const error = new Error('Invalid method');
-      this.websocket.send(serializeResponse({ id, error }));
-      return this._onError(error);
+      this._onError(error);
+      return this.sendError(id, error);
     }
 
     methods[method](request)
       .then(response => {
-        this.websocket.send(serializeResponse({ id, response }));
+        this.sendResponse(id, response);
         this.emit('response', response);
       })
       .catch(error => {
-        this.websocket.send(serializeResponse({ id, error }));
+        this.sendError(id, error);
         this._onError(error);
       });
+  }
+
+  _onMessage(message) {
+    let deserializedMessage;
+
+    try {
+      deserializedMessage = deserializeClientMessage(message);
+    } catch (error) {
+      this._onError(error);
+      return this.sendError(0, new Error('Malformed request'));
+    }
+
+    if (deserializedMessage.error) {
+      return this._handleErrorMessage(deserializedMessage);
+    }
+
+    if (deserializedMessage.response) {
+      return this._handleResponseMessage(deserializedMessage);
+    }
+
+    return this._handleRequestMessage(deserializedMessage);
   }
 
   _onPing() {

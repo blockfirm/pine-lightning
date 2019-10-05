@@ -4,8 +4,13 @@ import WebSocket from 'ws';
 import { RateLimiter } from 'limiter';
 
 import { verifyPineSignature } from '../crypto';
-import { deserializeClientMessage, serializeError } from '../serializers';
 import { validateClientMessage } from '../validators';
+
+import {
+  deserializeClientMessage,
+  serializeRequest,
+  serializeResponse
+} from '../serializers';
 
 export default class ClientServer extends events.EventEmitter {
   constructor(config, sessions) {
@@ -59,7 +64,7 @@ export default class ClientServer extends events.EventEmitter {
 
     const callId = client.callCounter++;
 
-    const data = JSON.stringify({
+    const data = serializeRequest({
       id: callId,
       method: methodName,
       request
@@ -69,14 +74,19 @@ export default class ClientServer extends events.EventEmitter {
     client.send(data);
   }
 
-  sendError(pineId, error) {
+  // eslint-disable-next-line max-params
+  sendResponse(pineId, callId, response, error) {
     const client = this.clients[pineId];
 
     if (!client) {
       throw Error('Client is not connected');
     }
 
-    client.send(serializeError(error));
+    client.send(serializeResponse({ id: callId, response, error }));
+  }
+
+  sendError(pineId, callId, error) {
+    return this.sendResponse(pineId, callId, null, error);
   }
 
   _ping() {
@@ -192,8 +202,17 @@ export default class ClientServer extends events.EventEmitter {
       return console.error('[CLIENT] Error when parsing message:', error.message);
     }
 
-    const { id, response, error } = deserialized;
+    const { id, response, request, method, error } = deserialized;
     const callback = ws.callbacks[id];
+
+    if (request) {
+      return this.emit('request', {
+        callId: id,
+        pineId: ws.pineId,
+        methodName: method,
+        request
+      });
+    }
 
     if (!callback) {
       return console.error('[CLIENT] No callback found for call');

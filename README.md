@@ -172,9 +172,12 @@ Errors should have the following format:
 
 ### Server errors
 
-The server can send errors to the client that are not related to a particular method.
-Errors have the following JSON fields:
+The server can send errors to the client. These can be caused by an RPC call
+or be sporadical. Errors have the following JSON fields:
 
+| Name | Type | Description |
+| --- | --- | --- |
+| id | *number* | The call ID that errored if it was caused by a particular call, otherwise 0. |
 | error | *Object* | Error data. |
 | error.name | *string* | Optional error name. |
 | error.message | *string* | Description of the error. |

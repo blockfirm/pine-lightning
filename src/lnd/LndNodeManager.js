@@ -28,8 +28,10 @@ export default class LndNodeManager {
       return Promise.reject('Cannot start a node without a Pine ID');
     }
 
-    if (this.nodes[pineId]) {
-      clearTimeout(this.nodes[pineId].shutdownTimer);
+    const existingNode = this.getNodeByPineId(pineId);
+
+    if (existingNode) {
+      clearTimeout(existingNode.shutdownTimer);
       return Promise.resolve();
     }
 
@@ -57,7 +59,7 @@ export default class LndNodeManager {
       return Promise.reject('Cannot stop a node without a Pine ID');
     }
 
-    const node = this.nodes[pineId];
+    const node = this.getNodeByPineId(pineId);
 
     if (!node) {
       return Promise.resolve();
@@ -73,7 +75,7 @@ export default class LndNodeManager {
 
   idle(pineId) {
     const { idleTimeout } = this.config;
-    const node = this.nodes[pineId];
+    const node = this.getNodeByPineId(pineId);
 
     if (!node) {
       return;
@@ -88,8 +90,12 @@ export default class LndNodeManager {
     }, idleTimeout * 60000);
   }
 
+  getNodeByPineId(pineId) {
+    return this.nodes[pineId];
+  }
+
   _onExit(pineId) {
-    const node = this.nodes[pineId];
+    const node = this.getNodeByPineId(pineId);
 
     if (node) {
       node.removeAllListeners();

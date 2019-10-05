@@ -7,7 +7,7 @@ const config = {
         messages: 50, // Amount of messages per interval for each connected client.
         interval: 'minute' // 'second', 'minute', 'hour', 'day', or a number of milliseconds.
       },
-      maxPayload: 100000, // 100k
+      maxPayload: 1000000, // 1M
       pingInterval: 30 // Ping clients every 30 seconds.
     },
     session: {
