@@ -9,7 +9,7 @@ const wait = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-describe('open channel', () => {
+describe('close channel', () => {
   let proxy;
   let client;
 
@@ -29,8 +29,7 @@ describe('open channel', () => {
       .then(() => proxy.stop());
   });
 
-  it('can open channel', () => {
-    const sats = '35000';
+  it('can close channel', () => {
     const errors = [];
 
     client.on('error', error => errors.push(error));
@@ -42,12 +41,12 @@ describe('open channel', () => {
           return assert(false, errors[0].message);
         }
 
-        return client.openChannel(sats).then(() => {
+        return client.closeChannel().then(() => {
           assert(true);
         });
       })
       .catch(error => {
-        assert(false, `Unable to open channel: ${error.message}`);
+        assert(false, `Unable to close channel: ${error.message}`);
       });
   });
 });

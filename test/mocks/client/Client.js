@@ -96,6 +96,18 @@ export default class Client extends events.EventEmitter {
     });
   }
 
+  closeChannel() {
+    return new Promise((resolve, reject) => {
+      this.sendRequest('closeChannel', {}, (error, response) => {
+        if (error) {
+          return reject(error);
+        }
+
+        resolve(response);
+      });
+    });
+  }
+
   _startSession() {
     const baseUri = this.config.bridge.sessionBaseUri;
     const endpoint = '/v1/lightning/sessions';
