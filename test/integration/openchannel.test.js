@@ -30,7 +30,7 @@ describe('open channel', () => {
   });
 
   it('can open a channel', () => {
-    const pubkey = '02b7eff6598f2a5595f81c4e180be852cd091040b4968936e0f7067bd687c542dc';
+    const sats = '35000';
     const errors = [];
 
     client.on('error', error => errors.push(error));
@@ -42,7 +42,7 @@ describe('open channel', () => {
           return assert(false, errors[0].message);
         }
 
-        return client.openChannel(pubkey).then(() => {
+        return client.openChannel(sats).then(() => {
           assert(true);
         });
       })

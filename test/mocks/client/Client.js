@@ -84,9 +84,9 @@ export default class Client extends events.EventEmitter {
     return this.sendResponse(callId, null, error);
   }
 
-  openChannel(pubkey) {
+  openChannel(sats) {
     return new Promise((resolve, reject) => {
-      this.sendRequest('openChannel', { pubkey }, (error, response) => {
+      this.sendRequest('openChannel', { sats }, (error, response) => {
         if (error) {
           return reject(error);
         }
