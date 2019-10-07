@@ -109,19 +109,19 @@ const computeInputScript = (request) => {
 
   return createTransactionBuilder(transaction)
     .then(psbt => {
+      const { inputIndex, hashType } = signDescriptor;
+
       psbt.signInput(
-        signDescriptor.inputIndex,
+        inputIndex,
         tweakedKeyPair,
-        [SIGHASH_MAP[signDescriptor.hashType]]
+        [SIGHASH_MAP[hashType]]
       );
 
-      psbt.validateSignaturesOfInput(signDescriptor.inputIndex);
-      psbt.finalizeAllInputs();
-
-      const builtTransaction = psbt.extractTransaction();
+      psbt.validateSignaturesOfInput(inputIndex);
+      psbt.finalizeInput(inputIndex);
 
       const response = {
-        signatureScript: builtTransaction.ins[0].script
+        signatureScript: psbt.data.inputs[inputIndex].finalScriptSig
       };
 
       console.log(`→ ${JSON.stringify(response)}\n`);
