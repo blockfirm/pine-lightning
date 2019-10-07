@@ -6,7 +6,6 @@ import proxyConfig from '../../src/config';
 import Proxy from '../../src/Proxy';
 import clientConfig from '../mocks/client/config';
 import Client from '../mocks/client/Client';
-import config from '../mocks/client/config';
 
 const wait = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -39,7 +38,7 @@ const generateBlocks = (numberOfBlocks) => {
 };
 
 const getLndGatewayRpcClient = () => {
-  const { adminMacaroon, rpcHost } = config.lndGateway;
+  const { adminMacaroon, rpcHost } = clientConfig.lndGateway;
 
   return createLnrpc({
     macaroonPath: adminMacaroon,

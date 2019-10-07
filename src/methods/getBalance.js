@@ -2,7 +2,7 @@
 import config from '../config';
 
 /**
- * Gets the user's lightning channel balance.
+ * Gets the user's lightning balance.
  */
 const getBalance = ({ lnd }) => {
   if (!lnd) {
@@ -10,20 +10,20 @@ const getBalance = ({ lnd }) => {
   }
 
   return lnd.lnrpc.listChannels({}).then(({ channels }) => {
-    const pineChannel = channels && channels.find(channel => {
-      return channel.remote_pubkey === config.lnd.pineHub.publicKey;
+    const gatewayChannel = channels && channels.find(channel => {
+      return channel.remote_pubkey === config.lnd.gateway.publicKey;
     });
 
-    if (!pineChannel) {
+    if (!gatewayChannel) {
       return Promise.reject(new Error('No open channels found'));
     }
 
     return {
       // The user's current balance in satoshis in this channel.
-      local: pineChannel.local_balance.toString(),
+      local: gatewayChannel.local_balance.toString(),
 
       // The total amount of funds in satoshis held in this channel.
-      capacity: pineChannel.capacity.toString()
+      capacity: gatewayChannel.capacity.toString()
     };
   });
 };

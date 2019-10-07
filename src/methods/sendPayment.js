@@ -1,7 +1,7 @@
-/* eslint-disable camelcase, lines-around-comment */
+/* eslint-disable camelcase */
 
 /**
- * Pay a Lightning network invoice using user's lnd node.
+ * Pays a Lightning invoice with the user's lnd node.
  */
 const sendPayment = ({ request, lnd }) => {
   if (!lnd) {

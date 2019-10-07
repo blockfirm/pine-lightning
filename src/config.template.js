@@ -36,7 +36,7 @@ const config = {
       '--logdir=log',
       '--debuglevel=info'
     ],
-    pineHub: {
+    gateway: {
       publicKey: '',
       host: 'localhost:10012'
     },

@@ -2,7 +2,7 @@
 import config from '../config';
 
 /**
- * Closes the user's channel to Pine's Lightning node.
+ * Closes the user's gateway channel.
  */
 const closeChannel = ({ lnd }) => {
   if (!lnd) {
@@ -10,15 +10,15 @@ const closeChannel = ({ lnd }) => {
   }
 
   return lnd.lnrpc.listChannels({}).then(({ channels }) => {
-    const pineChannel = channels && channels.find(channel => {
-      return channel.remote_pubkey === config.lnd.pineHub.publicKey;
+    const gatewayChannel = channels && channels.find(channel => {
+      return channel.remote_pubkey === config.lnd.gateway.publicKey;
     });
 
-    if (!pineChannel) {
+    if (!gatewayChannel) {
       return Promise.reject(new Error('No open channels found'));
     }
 
-    const [txid, outputIndex] = pineChannel.channel_point.split(':');
+    const [txid, outputIndex] = gatewayChannel.channel_point.split(':');
 
     return lnd.lnrpc.closeChannel({
       channel_point: {

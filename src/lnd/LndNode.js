@@ -26,7 +26,7 @@ export default class LndNode extends events.EventEmitter {
       });
 
       this.process.once('ready', () => {
-        this.connectToPineHub().then(resolve).catch(reject);
+        this.connectToGateway().then(resolve).catch(reject);
       });
 
       this.process.once('error', reject);
@@ -107,14 +107,14 @@ export default class LndNode extends events.EventEmitter {
     return this.lnrpc.initWallet(options);
   }
 
-  connectToPineHub() {
-    const { pineHub } = this.config;
-    console.log('[LND] Connecting node to peer...');
+  connectToGateway() {
+    const { gateway } = this.config;
+    console.log('[LND] Connecting node to gateway peer...');
 
     const options = {
       addr: {
-        pubkey: pineHub.publicKey,
-        host: pineHub.host
+        pubkey: gateway.publicKey,
+        host: gateway.host
       },
       perm: true
     };
