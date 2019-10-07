@@ -1,10 +1,12 @@
 import assert from 'assert';
 import { spawn } from 'child_process';
+import createLnrpc from 'lnrpc';
 
 import proxyConfig from '../../src/config';
 import Proxy from '../../src/Proxy';
 import clientConfig from '../mocks/client/config';
 import Client from '../mocks/client/Client';
+import config from '../mocks/client/config';
 
 const wait = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -34,6 +36,15 @@ const generateBlocks = (numberOfBlocks) => {
   ];
 
   return runCmd('btcctl', args);
+};
+
+const getLndGatewayRpcClient = () => {
+  const { adminMacaroon, rpcHost } = config.lndGateway;
+
+  return createLnrpc({
+    macaroonPath: adminMacaroon,
+    server: rpcHost
+  });
 };
 
 describe('integration between Pine lnd and client', () => {
@@ -136,6 +147,30 @@ describe('integration between Pine lnd and client', () => {
       })
       .catch(error => {
         assert(false, `Unable to get channel balance: ${error.message}`);
+      });
+  });
+
+  it('can send a payment', () => {
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return getLndGatewayRpcClient()
+      .then(lnrpc => {
+        return lnrpc.addInvoice({ value: 200 });
+      })
+      .then(invoice => {
+        return client.sendPayment(invoice.payment_request);
+      })
+      .then(paymentResult => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(paymentResult.paymentHash, 'Missing payment hash');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to send payment: ${error.message}`);
       });
   });
 
