@@ -1,6 +1,9 @@
 /* eslint-disable camelcase */
 import config from '../config';
 
+/**
+ * Opens a channel from the user's node to Pine's Lightning node.
+ */
 const openChannel = ({ request, lnd }) => {
   if (!lnd) {
     return Promise.reject(new Error('Missing lnd node'));

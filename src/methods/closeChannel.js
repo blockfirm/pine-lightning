@@ -1,6 +1,9 @@
 /* eslint-disable camelcase */
 import config from '../config';
 
+/**
+ * Closes the user's channel to Pine's Lightning node.
+ */
 const closeChannel = ({ lnd }) => {
   if (!lnd) {
     return Promise.reject(new Error('Missing lnd node'));
