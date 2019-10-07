@@ -103,6 +103,23 @@ describe('integration between Pine lnd and client', () => {
       });
   });
 
+  it('cannot open another channel', () => {
+    const sats = '45000';
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.openChannel(sats)
+      .then(() => {
+        assert(false, 'Client managed to open two channels');
+      })
+      .catch(error => {
+        if (!error.message.includes('channel has already been opened')) {
+          assert(false, `Error when opening second channel: ${error.message}`);
+        }
+      });
+  });
+
   it('can get channel balance', () => {
     const errors = [];
 

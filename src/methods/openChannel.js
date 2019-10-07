@@ -9,10 +9,20 @@ const openChannel = ({ request, lnd }) => {
     return Promise.reject(new Error('Missing lnd node'));
   }
 
-  return lnd.lnrpc.openChannelSync({
-    node_pubkey_string: config.lnd.pineHub.publicKey,
-    local_funding_amount: request.sats,
-    private: true
+  return lnd.lnrpc.listChannels({}).then(({ channels }) => {
+    const pineChannel = channels && channels.find(channel => {
+      return channel.remote_pubkey === config.lnd.pineHub.publicKey;
+    });
+
+    if (pineChannel) {
+      return Promise.reject(new Error('A channel has already been opened'));
+    }
+
+    return lnd.lnrpc.openChannelSync({
+      node_pubkey_string: config.lnd.pineHub.publicKey,
+      local_funding_amount: request.sats,
+      private: true
+    });
   });
 };
 

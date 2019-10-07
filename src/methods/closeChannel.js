@@ -10,7 +10,7 @@ const closeChannel = ({ lnd }) => {
   }
 
   return lnd.lnrpc.listChannels({}).then(({ channels }) => {
-    const pineChannel = channels.find(channel => {
+    const pineChannel = channels && channels.find(channel => {
       return channel.remote_pubkey === config.lnd.pineHub.publicKey;
     });
 
