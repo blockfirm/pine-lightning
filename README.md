@@ -14,8 +14,8 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
   * [Authentication](#authentication-1)
   * [Rate limiting](#rate-limiting-1)
 * [Client Websocket API](#client-websocket-api)
-  * [Server requests](#server-requests)
-  * [Client responses](#client-responses)
+  * [Requests](#requests)
+  * [Responses](#responses)
   * [Server errors](#server-errors)
   * [Authentication](#authentication-2)
   * [Rate limiting](#rate-limiting-2)
@@ -140,21 +140,21 @@ rateLimit: {
 ## Client Websocket API
 
 The client websocket API is an API used by the Pine app in order to communicate with its
-lnd node.
+lnd node. Both the server and the client can make RPC calls to each other.
 
-### Server requests
+### Requests
 
-Server requests are sent to the client as a JSON string with the following fields:
+Requests can be sent by both the server and the client as a JSON string with the following fields:
 
 | Name | Type | Description |
 | --- | --- | --- |
 | id | *number* | A unique call ID. |
-| method | *string* | Name of method to call. Must be one of the defined methods in [rpc.proto](src/protos/rpc.proto), but starting with lowercase. |
+| method | *string* | Name of method to call. Server requests: Must be one of the defined methods in [rpc.proto](src/protos/rpc.proto), but starting with lowercase. Client requests: Must be one of the defined methods in [methods/](src/methods/). |
 | request | *Object* | Request data to pass to the method. |
 
-### Client responses
+### Responses
 
-Client responses are sent as a response to a server request and should have the following JSON fields:
+Responses are sent as a response to a server or client request and should have the following JSON fields:
 
 | Name | Type | Description |
 | --- | --- | --- |
@@ -172,12 +172,12 @@ Errors should have the following format:
 
 ### Server errors
 
-The server can send errors to the client. These can be caused by an RPC call
-or be sporadical. Errors have the following JSON fields:
+The server can send sporadic errors to the client that is not related to a particular RPC call.
+Errors have the following JSON fields:
 
 | Name | Type | Description |
 | --- | --- | --- |
-| id | *number* | The call ID that errored if it was caused by a particular call, otherwise 0. |
+| id | *number* | Always `0`. |
 | error | *Object* | Error data. |
 | error.name | *string* | Optional error name. |
 | error.message | *string* | Description of the error. |
