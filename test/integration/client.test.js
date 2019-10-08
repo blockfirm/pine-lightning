@@ -173,6 +173,26 @@ describe('integration between Pine lnd and client', () => {
       });
   });
 
+  it('can create a new invoice', () => {
+    const amount = 300;
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.createInvoice(amount)
+      .then(invoice => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(invoice, 'No invoice returned');
+          assert(invoice.paymentRequest, 'Invoice is missing payment request');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to get channel balance: ${error.message}`);
+      });
+  });
+
   it('can close channel', () => {
     const errors = [];
 
