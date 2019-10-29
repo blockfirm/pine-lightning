@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import btcwallet from '../btcwallet';
 
 const ADDRESS_TYPE_UNKNOWN = 0;
@@ -36,20 +37,18 @@ const fetchInputInfo = (request) => {
           selectedOutput.transaction_hash.equals(hash) && selectedOutput.output_index === index
         ));
 
-        if (!output) {
-          // TODO: Handle this error correctly in the client.
-          console.log('→ ErrNotMine}');
-          return reject(new Error('ErrNotMine'));
-        }
+        let utxo = null;
 
-        const utxo = {
-          addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
-          value: Number(output.amount),
-          confirmations: 100,
-          pkScript: output.pk_script,
-          transactionHash: output.transaction_hash,
-          vout: output.output_index
-        };
+        if (output) {
+          utxo = {
+            addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
+            value: Number(output.amount),
+            confirmations: 100,
+            pkScript: output.pk_script,
+            transactionHash: output.transaction_hash,
+            vout: output.output_index
+          };
+        }
 
         console.log(`→ ${JSON.stringify(utxo)}\n`);
         resolve({ utxo });
