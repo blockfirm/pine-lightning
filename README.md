@@ -16,7 +16,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 * [Client Websocket API](#client-websocket-api)
   * [Requests](#requests)
   * [Responses](#responses)
-  * [Server errors](#server-errors)
+  * [Server events](#server-events)
   * [Authentication](#authentication-2)
   * [Rate limiting](#rate-limiting-2)
 * [Node API](#node-api)
@@ -170,17 +170,31 @@ Errors should have the following format:
 | error.name | *string* | Optional error name. |
 | error.message | *string* | Description of the error. |
 
-### Server errors
+### Server events
 
-The server can send sporadic errors to the client that is not related to a particular RPC call.
-Errors have the following JSON fields:
+The server can send sporadic events to the client that are not related to a particular RPC call.
+Events have the following JSON fields:
 
 | Name | Type | Description |
 | --- | --- | --- |
-| id | *number* | Always `0`. |
-| error | *Object* | Error data. |
-| error.name | *string* | Optional error name. |
-| error.message | *string* | Description of the error. |
+| event | *string* | Event name. |
+| data | *Object* | Optional event data. |
+
+#### Ready event
+
+The `ready` event is emitted when a client has connected and its lnd node is ready.
+
+| Event Name | Event Data |
+| --- | --- |
+| `ready` | *N/A* |
+
+#### Error event
+
+The `error` event is emitted when an error occurs that is not related to a particular RPC call.
+
+| Event Name | Event Data |
+| --- | --- |
+| `error` | `name` and `message` |
 
 ### Authentication
 

@@ -15,6 +15,7 @@ export default class Proxy {
     this.clientServer.on('disconnect', this._onClientDisconnect.bind(this));
     this.clientServer.on('request', this._onClientRequest.bind(this));
 
+    this.lndNodeManager.on('ready', this._onNodeReady.bind(this));
     this.nodeServer.on('request', this._onNodeRequest.bind(this));
   }
 
@@ -29,7 +30,9 @@ export default class Proxy {
     this.sessionServer.stop();
     this.nodeServer.stop();
 
-    return this.lndNodeManager.stopAll();
+    return this.lndNodeManager.stopAll().then(() => {
+      this.lndNodeManager.removeAllListeners();
+    });
   }
 
   _onClientConnect({ pineId }) {
@@ -63,6 +66,14 @@ export default class Proxy {
       .catch(error => {
         this.clientServer.sendError(pineId, callId, error);
       });
+  }
+
+  _onNodeReady({ pineId }) {
+    try {
+      this.clientServer.sendEvent(pineId, 'ready');
+    } catch (error) {
+      console.error('[PROXY] On ready error:', error.message);
+    }
   }
 
   _onNodeRequest({ pineId, methodName, request, callback }) {

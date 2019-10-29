@@ -1,3 +1,4 @@
+import events from 'events';
 import net from 'net';
 import LndNode from './LndNode';
 
@@ -16,8 +17,10 @@ const getUnusedPort = () => {
   });
 };
 
-export default class LndNodeManager {
+export default class LndNodeManager extends events.EventEmitter {
   constructor(config, serverConfig) {
+    super();
+
     this.config = config;
     this.serverConfig = serverConfig;
     this.nodes = {};
@@ -32,7 +35,12 @@ export default class LndNodeManager {
 
     if (existingNode) {
       clearTimeout(existingNode.shutdownTimer);
-      return Promise.resolve();
+
+      return Promise.resolve().then(() => {
+        if (existingNode.isReady()) {
+          this._onNodeReady(pineId);
+        }
+      });
     }
 
     return getUnusedPort()
@@ -47,6 +55,9 @@ export default class LndNodeManager {
         this.nodes[pineId] = node;
 
         return node.start();
+      })
+      .then(() => {
+        this._onNodeReady(pineId);
       })
       .catch(error => {
         this.stop(pineId);
@@ -92,6 +103,10 @@ export default class LndNodeManager {
 
   getNodeByPineId(pineId) {
     return this.nodes[pineId];
+  }
+
+  _onNodeReady(pineId) {
+    this.emit('ready', { pineId });
   }
 
   _onExit(pineId) {

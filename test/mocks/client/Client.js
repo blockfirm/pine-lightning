@@ -143,6 +143,7 @@ export default class Client extends events.EventEmitter {
       });
     });
   }
+
   _startSession() {
     const baseUri = this.config.bridge.sessionBaseUri;
     const endpoint = '/v1/lightning/sessions';
@@ -190,14 +191,28 @@ export default class Client extends events.EventEmitter {
     this.emit('error', error);
   }
 
-  _handleErrorMessage(errorMessage) {
-    if (errorMessage.id) {
-      return this._handleResponseMessage(errorMessage);
-    }
+  _onReady() {
+    console.log('[MOCK] Ready');
+    this.emit('ready');
+  }
 
-    const error = new Error(errorMessage.error.message);
-    error.name = errorMessage.error.name;
-    return this._onError(error);
+  _handleEventMessage(eventMessage) {
+    const { event } = eventMessage;
+    const data = eventMessage.data || {};
+    let error;
+
+    switch (event) {
+      case 'error':
+        error = new Error(data.message);
+        error.name = data.name;
+        return this._onError(error);
+
+      case 'ready':
+        return this._onReady();
+
+      default:
+        console.error(`[MOCK] Unknown event '${event}'`);
+    }
   }
 
   _handleResponseMessage(responseMessage) {
@@ -247,11 +262,11 @@ export default class Client extends events.EventEmitter {
       return this.sendError(0, new Error('Malformed request'));
     }
 
-    if (deserializedMessage.error) {
-      return this._handleErrorMessage(deserializedMessage);
+    if (deserializedMessage.event) {
+      return this._handleEventMessage(deserializedMessage);
     }
 
-    if (deserializedMessage.response) {
+    if (deserializedMessage.response || deserializedMessage.error) {
       return this._handleResponseMessage(deserializedMessage);
     }
 

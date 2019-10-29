@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import http from 'http';
 import events from 'events';
 import WebSocket from 'ws';
@@ -9,7 +10,8 @@ import { validateClientMessage } from '../validators';
 import {
   deserializeClientMessage,
   serializeRequest,
-  serializeResponse
+  serializeResponse,
+  serializeEvent
 } from '../serializers';
 
 export default class ClientServer extends events.EventEmitter {
@@ -85,8 +87,25 @@ export default class ClientServer extends events.EventEmitter {
     client.send(serializeResponse({ id: callId, response, error }));
   }
 
+  sendEvent(pineId, eventName, data) {
+    const client = this.clients[pineId];
+
+    if (!client) {
+      throw Error('Client is not connected');
+    }
+
+    client.send(serializeEvent({ event: eventName, data }));
+  }
+
   sendError(pineId, callId, error) {
-    return this.sendResponse(pineId, callId, null, error);
+    if (callId) {
+      return this.sendResponse(pineId, callId, null, error);
+    }
+
+    return this.sendEvent(pineId, 'error', {
+      name: error.name,
+      message: error.message
+    });
   }
 
   _ping() {

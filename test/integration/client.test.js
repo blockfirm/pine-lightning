@@ -74,11 +74,14 @@ describe('integration between Pine lnd and client', () => {
   });
 
   it('can connect successfully', () => {
-    const responses = [];
     const errors = [];
+    let isReady = false;
 
-    client.on('response', response => responses.push(response));
     client.on('error', error => errors.push(error));
+
+    client.on('ready', () => {
+      isReady = true;
+    });
 
     return client.connect()
       .then(() => wait(5000))
@@ -86,11 +89,38 @@ describe('integration between Pine lnd and client', () => {
         if (errors.length) {
           assert(false, errors[0].message);
         } else {
-          assert(true);
+          assert(isReady, 'Ready event was never received');
         }
       })
       .catch(error => {
         assert(false, `Unable to connect to Pine Lightning: ${error.message}`);
+      });
+  });
+
+  it('can disconnect and reconnect successfully', () => {
+    const errors = [];
+    let isReady = false;
+
+    client.on('error', error => errors.push(error));
+
+    client.on('ready', () => {
+      isReady = true;
+    });
+
+    client.disconnect();
+
+    return wait(3000)
+      .then(() => client.connect())
+      .then(() => wait(5000))
+      .then(() => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(isReady, 'Ready event was never received');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to reconnect to Pine Lightning: ${error.message}`);
       });
   });
 

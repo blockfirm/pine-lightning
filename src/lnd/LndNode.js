@@ -26,7 +26,9 @@ export default class LndNode extends events.EventEmitter {
       });
 
       this.process.once('ready', () => {
-        this.connectToGateway().then(resolve).catch(reject);
+        this.connectToGateway()
+          .then(resolve)
+          .catch(reject);
       });
 
       this.process.once('error', reject);
