@@ -40,7 +40,9 @@ const config = {
       publicKey: '',
       host: 'localhost:10012'
     },
-    idleTimeout: 5 // Shut down node after 5 minutes of inactivity.
+    idleTimeout: 5, // Shut down node after 5 minutes of inactivity.
+    dummyMnemonic: 'about peasant hen three police liberty horror gauge smoke random include chair broken cool curtain carpet oil truly job blue tree zone govern sail',
+    walletPassword: '6ae87cf6-050b-48e6-acc6-263996574e57'
   }
 };
 

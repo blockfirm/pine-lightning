@@ -3,9 +3,6 @@ import path from 'path';
 import createLnrpc from 'lnrpc';
 import LndProcess from './LndProcess';
 
-const WALLET_PASSWORD = 'timothy123';
-const DUMMY_SEED_MNEMONIC = 'abandon category occur glad square empower half chef door puzzle sauce begin coral text drive clarify always kid lizard piano dentist canyon practice together';
-
 export default class LndNode extends events.EventEmitter {
   constructor(pineId, config) {
     super();
@@ -90,7 +87,7 @@ export default class LndNode extends events.EventEmitter {
 
     const options = {
       // eslint-disable-next-line camelcase
-      wallet_password: Buffer.from(WALLET_PASSWORD)
+      wallet_password: Buffer.from(this.config.walletPassword)
     };
 
     return this.lnrpc.unlockWallet(options);
@@ -101,9 +98,9 @@ export default class LndNode extends events.EventEmitter {
 
     const options = {
       // eslint-disable-next-line camelcase
-      wallet_password: Buffer.from(WALLET_PASSWORD),
+      wallet_password: Buffer.from(this.config.walletPassword),
       // eslint-disable-next-line camelcase
-      cipher_seed_mnemonic: DUMMY_SEED_MNEMONIC.split(' ')
+      cipher_seed_mnemonic: this.config.dummyMnemonic.split(' ')
     };
 
     return this.lnrpc.initWallet(options);
