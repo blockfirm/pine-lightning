@@ -1,3 +1,4 @@
+import { RedisClient } from './database';
 import { ClientServer, NodeServer, SessionServer } from './servers';
 import LndNodeManager from './lnd/LndNodeManager';
 import methods from './methods';
@@ -6,6 +7,7 @@ export default class Proxy {
   constructor(config) {
     this.config = config;
 
+    this.redis = new RedisClient(config.redis);
     this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
     this.sessionServer = new SessionServer(config.servers.session);
     this.clientServer = new ClientServer(config.servers.client, this.sessionServer.sessions);
@@ -58,8 +60,9 @@ export default class Proxy {
     }
 
     const lnd = this.lndNodeManager.getNodeByPineId(pineId);
+    const redis = this.redis;
 
-    method({ request, lnd })
+    method({ request, pineId, lnd, redis })
       .then(response => {
         this.clientServer.sendResponse(pineId, callId, response);
       })
