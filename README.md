@@ -17,6 +17,7 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
   * [Requests](#requests)
   * [Responses](#responses)
   * [Server events](#server-events)
+  * [Ping/Pong](#pingpong)
   * [Authentication](#authentication-2)
   * [Rate limiting](#rate-limiting-2)
 * [Node API](#node-api)
@@ -196,6 +197,17 @@ The `error` event is emitted when an error occurs that is not related to a parti
 | Event Name | Event Data |
 | --- | --- |
 | `error` | `name` and `message` |
+
+### Ping/Pong
+
+The server will send out a ping with a certain interval (by default every 30 seconds)
+to keep the connection alive and to check whether it actually is alive.
+
+If the server sends a message containing only `ping`, the client must respond with `pong`,
+otherwise the server will assume the client is dead and disconnect it.
+
+The client should assume the connection is dead if no ping has been received within
+the ping interval + some assumption of latency (e.g. 2 seconds).
 
 ### Authentication
 

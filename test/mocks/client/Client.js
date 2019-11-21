@@ -46,7 +46,6 @@ export default class Client extends events.EventEmitter {
       this.websocket.on('close', this._onClose.bind(this));
       this.websocket.on('error', this._onError.bind(this));
       this.websocket.on('message', this._onMessage.bind(this));
-      this.websocket.on('ping', this._onPing.bind(this));
     });
   }
 
@@ -154,7 +153,7 @@ export default class Client extends events.EventEmitter {
 
     return axios.post(`${baseUri}${endpoint}`, null, { headers }).then(response => {
       this.sessionId = response.data.sessionId;
-      console.log('[MOCK] Started new session: ', this.sessionId);
+      console.log('[MOCK] Started new session:', this.sessionId);
       return this.sessionId;
     });
   }
@@ -255,6 +254,10 @@ export default class Client extends events.EventEmitter {
   _onMessage(message) {
     let deserializedMessage;
 
+    if (message === 'ping') {
+      return this._onPing();
+    }
+
     try {
       deserializedMessage = deserializeClientMessage(message);
     } catch (error) {
@@ -275,6 +278,10 @@ export default class Client extends events.EventEmitter {
 
   _onPing() {
     const { pingInterval } = this.config.bridge;
+
+    // Respond with pong.
+    this.websocket.send('pong');
+
     clearTimeout(this._pingTimeout);
 
     /**

@@ -124,7 +124,7 @@ export default class ClientServer extends events.EventEmitter {
       }
 
       ws.isAlive = false;
-      ws.ping(() => {});
+      ws.send('ping');
     });
   }
 
@@ -187,10 +187,6 @@ export default class ClientServer extends events.EventEmitter {
     ws.callbacks = ws.callbacks || {};
     ws.isAlive = true;
 
-    ws.on('pong', () => {
-      ws.isAlive = true;
-    });
-
     ws.on('message', (message) => {
       limiter.removeTokens(1, (error, remainingRequests) => {
         if (error || remainingRequests < 1) {
@@ -218,8 +214,14 @@ export default class ClientServer extends events.EventEmitter {
     console.error('[CLIENT] Server error:', error.message);
   }
 
+  // eslint-disable-next-line max-statements
   _onClientMessage(ws, message) {
     let deserialized;
+
+    if (message === 'pong') {
+      ws.isAlive = true;
+      return;
+    }
 
     try {
       deserialized = deserializeClientMessage(message);
