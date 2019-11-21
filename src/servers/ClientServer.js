@@ -14,6 +14,13 @@ import {
   serializeEvent
 } from '../serializers';
 
+const getAuthorizationFromHeaders = (headers) => {
+  const { authorization } = headers;
+  const secWebsocketProtocol = headers['sec-websocket-protocol'];
+
+  return authorization || secWebsocketProtocol;
+};
+
 export default class ClientServer extends events.EventEmitter {
   constructor(config, sessions) {
     super();
@@ -122,7 +129,7 @@ export default class ClientServer extends events.EventEmitter {
   }
 
   _authenticateRequest(request) {
-    const authorization = request.headers.authorization;
+    const authorization = getAuthorizationFromHeaders(request.headers);
 
     if (!authorization) {
       throw new Error('Authorization header is missing');

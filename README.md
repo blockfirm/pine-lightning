@@ -219,6 +219,14 @@ base64('<sessionId>:<signature>')
 The **signature** is a signature of the session ID using the user's private key
 (`secp256k1.sign(sha256(sha256(sessionId)), privateKey).toBase64()` with recovery).
 
+**Note:** If your client doesn't support setting custom headers, use the `Sec-WebSocket-Protocol`
+header instead. This can be done by passing the header as the `protocols` parameter
+to [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket):
+
+```javascript
+const websocket = new WebSocket(url, 'Basic <credentials>');
+```
+
 ### Rate limiting
 
 The websocket API is rate limited for each connected client. Each client can by default
