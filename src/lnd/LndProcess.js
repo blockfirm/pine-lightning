@@ -39,7 +39,8 @@ export default class LndProcess extends events.EventEmitter {
         `--pine.rpc=${server.host}:${server.port}`,
         '--nolisten',
         '--norest',
-        '--nobootstrap'
+        '--nobootstrap',
+        '--autopilot.maxchannels=0'
       ];
 
       this.process = runCmd(bin, args, cwd);
