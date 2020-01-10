@@ -40,14 +40,24 @@ const listUnspentWitness = (request) => {
           return reject(error);
         }
 
-        const utxos = response.selected_outputs.map((output) => ({
-          addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
-          value: Number(output.amount),
-          confirmations: 100,
-          pkScript: output.pk_script,
-          transactionHash: output.transaction_hash,
-          vout: output.output_index
-        }));
+        const utxos = response.selected_outputs
+          .filter((output) => {
+            /**
+             * This makes sure only "fresh" outputs are used.
+             * Otherwise witness outputs from funding transactions
+             * might be selected and those are not supported by
+             * this mock client.
+             */
+            return output.from_coinbase;
+          })
+          .map((output) => ({
+            addressType: ADDRESS_TYPE_NESTED_WITNESS_PUBKEY,
+            value: Number(output.amount),
+            confirmations: 100,
+            pkScript: output.pk_script,
+            transactionHash: output.transaction_hash,
+            vout: output.output_index
+          }));
 
         const unspentWitness = { utxos: excludeLockedOutpoints(utxos) };
         console.log(`→ ${utxos.length}\n`);
