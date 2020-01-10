@@ -287,6 +287,34 @@ To run the integration tests, run the following command:
 $ npm run test-it
 ```
 
+**Note:** Since btcwallet only supports `p2pkh` addresses and lnd does not, you will need
+to apply this patch to pine-lnd before running the integration tests:
+
+```diff
+diff --git a/lnwallet/chanfunding/coin_select.go b/lnwallet/chanfunding/coin_select.go
+index f1ce008d..5715ea4a 100644
+--- a/lnwallet/chanfunding/coin_select.go
++++ b/lnwallet/chanfunding/coin_select.go
+@@ -70,7 +70,7 @@ func CoinSelect(feeRate chainfee.SatPerKWeight, amt btcutil.Amount,
+
+                var weightEstimate input.TxWeightEstimator
+
+-               for _, utxo := range selectedUtxos {
++               /*for _, utxo := range selectedUtxos {
+                        switch {
+
+                        case txscript.IsPayToWitnessPubKeyHash(utxo.PkScript):
+@@ -83,7 +83,7 @@ func CoinSelect(feeRate chainfee.SatPerKWeight, amt btcutil.Amount,
+                                return nil, 0, fmt.Errorf("unsupported address type: %x",
+                                        utxo.PkScript)
+                        }
+-               }
++               }*/
+
+                // Channel funding multisig output is P2WSH.
+                weightEstimate.AddP2WSHOutput()
+```
+
 ### Mocking
 
 To facilitate development, a mock client is available that will act as a Pine client:
