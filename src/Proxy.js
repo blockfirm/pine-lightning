@@ -68,6 +68,9 @@ export default class Proxy {
       })
       .catch(error => {
         this.clientServer.sendError(pineId, callId, error);
+      })
+      .catch(error => {
+        console.error('[PROXY] On client request error:', error.message);
       });
   }
 
