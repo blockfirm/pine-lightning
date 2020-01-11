@@ -120,6 +120,7 @@ export default class ClientServer extends events.EventEmitter {
 
     Object.values(clients).forEach(ws => {
       if (ws.isAlive === false) {
+        console.error('[CLIENT] Ping failed, terminating...');
         return ws.terminate();
       }
 
