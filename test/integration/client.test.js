@@ -192,8 +192,10 @@ describe('integration between Pine lnd and client', () => {
         if (errors.length) {
           assert(false, errors[0].message);
         } else {
-          assert(balance.capacity === '35000', 'Returned capacity is incorrect');
-          assert(balance.local === '25950', 'Returned local balance is incorrect');
+          assert(balance.capacity === '35000', 'Returned incorrect capacity');
+          assert(balance.local === '25950', 'Returned incorrect local balance');
+          assert(balance.remote === '0', 'Returned incorrect remote balance');
+          assert(balance.commitFee === '9050', 'Returned incorrect commit fee');
         }
       })
       .catch(error => {

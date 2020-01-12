@@ -8,13 +8,19 @@ const saveChannelProperty = (redis, pineId, key, value) => {
   );
 };
 
+const longToString = (long) => {
+  return long ? long.toString() : '0';
+};
+
 /**
  * Gets the user's lightning balance.
  */
 const getBalance = ({ lnd, pineId, redis }) => {
   let channelId;
-  let localBalance;
   let capacity;
+  let localBalance;
+  let remoteBalance;
+  let commitFee;
 
   if (!lnd) {
     return Promise.reject(new Error('Missing lnd node'));
@@ -22,17 +28,19 @@ const getBalance = ({ lnd, pineId, redis }) => {
 
   return lnd.lnrpc.listChannels({})
     .then(({ channels }) => {
-      const gatewayChannel = channels && channels.find(channel => {
-        return channel.remote_pubkey === config.lnd.gateway.publicKey;
-      });
+      const gatewayChannel = channels && channels.find(channel => (
+        channel.remote_pubkey === config.lnd.gateway.publicKey
+      ));
 
       if (!gatewayChannel) {
         throw new Error('No open channels found');
       }
 
-      channelId = gatewayChannel.chan_id.toString();
-      localBalance = gatewayChannel.local_balance.toString();
-      capacity = gatewayChannel.capacity.toString();
+      channelId = longToString(gatewayChannel.chan_id);
+      capacity = longToString(gatewayChannel.capacity);
+      localBalance = longToString(gatewayChannel.local_balance);
+      remoteBalance = longToString(gatewayChannel.remote_balance);
+      commitFee = longToString(gatewayChannel.commit_fee);
     })
     .then(() => {
       /**
@@ -41,16 +49,24 @@ const getBalance = ({ lnd, pineId, redis }) => {
        */
       return Promise.all([
         saveChannelProperty(redis, pineId, 'id', channelId),
+        saveChannelProperty(redis, pineId, 'capacity', capacity),
         saveChannelProperty(redis, pineId, 'local-balance', localBalance),
-        saveChannelProperty(redis, pineId, 'capacity', capacity)
+        saveChannelProperty(redis, pineId, 'remote-balance', remoteBalance),
+        saveChannelProperty(redis, pineId, 'commit-fee', commitFee)
       ]);
     })
     .then(() => ({
+      // The total amount of funds in satoshis held in this channel.
+      capacity,
+
       // The user's current balance in satoshis in this channel.
       local: localBalance,
 
-      // The total amount of funds in satoshis held in this channel.
-      capacity
+      // The remote balance in satoshis in this channel.
+      remote: remoteBalance,
+
+      // The calculated fee in satoshis for the commitment transaction.
+      commitFee
     }));
 };
 
