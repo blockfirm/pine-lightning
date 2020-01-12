@@ -21,6 +21,7 @@ const openChannel = ({ request, lnd }) => {
     return lnd.lnrpc.openChannelSync({
       node_pubkey_string: config.lnd.gateway.publicKey,
       local_funding_amount: request.sats,
+      sat_per_byte: request.satsPerByte,
       private: true
     });
   });
