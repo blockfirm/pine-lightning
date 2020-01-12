@@ -70,7 +70,6 @@ describe('integration between Pine lnd and client', () => {
 
   afterEach(() => {
     client.removeAllListeners();
-    return generateBlocks(10).then(() => wait(1500));
   });
 
   it('can connect successfully', () => {
@@ -143,6 +142,26 @@ describe('integration between Pine lnd and client', () => {
       });
   });
 
+  it('cannot open another pending channel', () => {
+    const sats = '45000';
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.openChannel(sats)
+      .then(() => {
+        assert(false, 'Client managed to open two pending channels');
+      })
+      .catch(error => {
+        if (!error.message.includes('channel is already pending')) {
+          assert(false, `Error when opening second pending channel: ${error.message}`);
+        }
+      })
+      .then(() => {
+        return generateBlocks(10).then(() => wait(1500));
+      });
+  });
+
   it('cannot open another channel', () => {
     const sats = '45000';
     const errors = [];
@@ -157,6 +176,9 @@ describe('integration between Pine lnd and client', () => {
         if (!error.message.includes('channel has already been opened')) {
           assert(false, `Error when opening second channel: ${error.message}`);
         }
+      })
+      .then(() => {
+        return generateBlocks(10).then(() => wait(1500));
       });
   });
 
@@ -238,6 +260,9 @@ describe('integration between Pine lnd and client', () => {
       })
       .catch(error => {
         assert(false, `Unable to close channel: ${error.message}`);
+      })
+      .then(() => {
+        return generateBlocks(10).then(() => wait(1500));
       });
   });
 });
