@@ -86,7 +86,7 @@ const getBalance = ({ lnd, pineId, redis }) => {
        * payment server for calculating inbound capacity.
        */
       return Promise.all([
-        saveChannelProperty(redis, pineId, 'pending', pending),
+        saveChannelProperty(redis, pineId, 'pending', pending ? '1' : '0'),
         saveChannelProperty(redis, pineId, 'id', channelId),
         saveChannelProperty(redis, pineId, 'capacity', capacity),
         saveChannelProperty(redis, pineId, 'local-balance', localBalance),
