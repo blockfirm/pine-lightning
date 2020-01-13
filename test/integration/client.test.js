@@ -142,6 +142,28 @@ describe('integration between Pine lnd and client', () => {
       });
   });
 
+  it('can get pending channel balance', () => {
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.getBalance()
+      .then(balance => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(balance.pending, 'Returned balance is not pending');
+          assert(balance.capacity === '35000', 'Returned incorrect capacity');
+          assert(balance.local === '25950', 'Returned incorrect local balance');
+          assert(balance.remote === '0', 'Returned incorrect remote balance');
+          assert(balance.commitFee === '9050', 'Returned incorrect commit fee');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to get pending channel balance: ${error.message}`);
+      });
+  });
+
   it('cannot open another pending channel', () => {
     const sats = '45000';
     const errors = [];
@@ -156,9 +178,6 @@ describe('integration between Pine lnd and client', () => {
         if (!error.message.includes('channel is already pending')) {
           assert(false, `Error when opening second pending channel: ${error.message}`);
         }
-      })
-      .then(() => {
-        return generateBlocks(10).then(() => wait(1500));
       });
   });
 
@@ -168,7 +187,10 @@ describe('integration between Pine lnd and client', () => {
 
     client.on('error', error => errors.push(error));
 
-    return client.openChannel(sats)
+    return generateBlocks(10).then(() => wait(1500))
+      .then(() => {
+        return client.openChannel(sats);
+      })
       .then(() => {
         assert(false, 'Client managed to open two channels');
       })
@@ -176,9 +198,6 @@ describe('integration between Pine lnd and client', () => {
         if (!error.message.includes('channel has already been opened')) {
           assert(false, `Error when opening second channel: ${error.message}`);
         }
-      })
-      .then(() => {
-        return generateBlocks(10).then(() => wait(1500));
       });
   });
 
@@ -187,11 +206,15 @@ describe('integration between Pine lnd and client', () => {
 
     client.on('error', error => errors.push(error));
 
-    return client.getBalance()
+    return generateBlocks(10).then(() => wait(1500))
+      .then(() => {
+        return client.getBalance();
+      })
       .then(balance => {
         if (errors.length) {
           assert(false, errors[0].message);
         } else {
+          assert(!balance.pending, 'Returned balance is pending');
           assert(balance.capacity === '35000', 'Returned incorrect capacity');
           assert(balance.local === '25950', 'Returned incorrect local balance');
           assert(balance.remote === '0', 'Returned incorrect remote balance');
