@@ -96,14 +96,15 @@ export default class LndNode extends events.EventEmitter {
   createWallet() {
     console.log('[LND] Creating wallet...');
 
-    const options = {
-      // eslint-disable-next-line camelcase
-      wallet_password: Buffer.from(this.config.walletPassword),
-      // eslint-disable-next-line camelcase
-      cipher_seed_mnemonic: this.config.dummyMnemonic.split(' ')
-    };
-
-    return this.lnrpc.initWallet(options);
+    // eslint-disable-next-line camelcase
+    return this.lnrpc.genSeed({}).then(({ cipher_seed_mnemonic }) => {
+      return this.lnrpc.initWallet({
+        // eslint-disable-next-line camelcase
+        wallet_password: Buffer.from(this.config.walletPassword),
+        // eslint-disable-next-line camelcase
+        cipher_seed_mnemonic
+      });
+    });
   }
 
   connectToGateway() {
