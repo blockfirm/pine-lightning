@@ -88,6 +88,10 @@ export default class Proxy {
     } catch (error) {
       console.error('[PROXY] Request Error:', error.message);
       callback(error);
+
+      if (!this.clientServer.isClientConnected(pineId)) {
+        this.lndNodeManager.stop(pineId);
+      }
     }
   }
 }

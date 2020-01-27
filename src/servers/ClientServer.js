@@ -115,6 +115,11 @@ export default class ClientServer extends events.EventEmitter {
     });
   }
 
+  isClientConnected(pineId) {
+    const client = this.clients[pineId];
+    return client && client.isAlive;
+  }
+
   _ping() {
     const { clients } = this;
 
