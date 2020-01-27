@@ -68,7 +68,7 @@ export default class ClientServer extends events.EventEmitter {
     const client = this.clients[pineId];
 
     if (!client) {
-      throw Error('Client is not connected');
+      throw new Error('Client is not connected');
     }
 
     const callId = client.callCounter++;
@@ -88,7 +88,7 @@ export default class ClientServer extends events.EventEmitter {
     const client = this.clients[pineId];
 
     if (!client) {
-      throw Error('Client is not connected');
+      throw new Error('Client is not connected');
     }
 
     client.send(serializeResponse({ id: callId, response, error }));
@@ -98,7 +98,7 @@ export default class ClientServer extends events.EventEmitter {
     const client = this.clients[pineId];
 
     if (!client) {
-      throw Error('Client is not connected');
+      throw new Error('Client is not connected');
     }
 
     client.send(serializeEvent({ event: eventName, data }));
