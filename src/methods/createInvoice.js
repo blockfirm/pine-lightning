@@ -11,11 +11,14 @@ const createInvoice = ({ request, lnd }) => {
     return Promise.reject(new Error('Missing lnd node'));
   }
 
-  return lnd.lnrpc.addInvoice({ value: request.amount }).then(invoice => {
-    return {
-      paymentRequest: invoice.payment_request
-    };
-  });
+  const invoiceOptions = {
+    value: request.amount,
+    private: true // Include routing hints for private channels.
+  };
+
+  return lnd.lnrpc.addInvoice(invoiceOptions).then(invoice => ({
+    paymentRequest: invoice.payment_request
+  }));
 };
 
 export default createInvoice;
