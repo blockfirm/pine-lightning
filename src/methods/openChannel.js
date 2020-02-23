@@ -49,7 +49,11 @@ const openChannel = ({ request, lnd }) => {
         sat_per_byte: request.satsPerByte,
         private: true
       });
-    });
+    })
+    .then(channel => ({
+      fundingTxid: channel.funding_txid_str,
+      outputIndex: channel.output_index
+    }));
 };
 
 export default openChannel;
