@@ -53,25 +53,33 @@ export default class Proxy {
   }
 
   _onClientRequest({ pineId, methodName, request, callId }) {
-    const method = methods[methodName];
+    try {
+      const method = methods[methodName];
 
-    if (!method) {
-      this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
-    }
+      if (!method) {
+        this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
+      }
 
-    const lnd = this.lndNodeManager.getNodeByPineId(pineId);
-    const redis = this.redis;
+      const lnd = this.lndNodeManager.getNodeByPineId(pineId);
+      const redis = this.redis;
 
-    method({ request, pineId, lnd, redis })
-      .then(response => {
-        this.clientServer.sendResponse(pineId, callId, response);
-      })
-      .catch(error => {
+      method({ request, pineId, lnd, redis })
+        .then(response => {
+          this.clientServer.sendResponse(pineId, callId, response);
+        })
+        .catch(error => {
+          this.clientServer.sendError(pineId, callId, error);
+        })
+        .catch(error => {
+          console.error('[PROXY] On client request error:', error.message);
+        });
+    } catch (error) {
+      try {
         this.clientServer.sendError(pineId, callId, error);
-      })
-      .catch(error => {
-        console.error('[PROXY] On client request error:', error.message);
-      });
+      } catch (sendError) {
+        console.error('[PROXY] On client request error:', sendError.message);
+      }
+    }
   }
 
   _onNodeReady({ pineId }) {
