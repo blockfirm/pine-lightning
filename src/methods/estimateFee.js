@@ -25,7 +25,7 @@ const estimateFee = ({ request, lnd }) => {
     }
 
     const fees = routes.map(route => {
-      return BigInt(route.total_fees);
+      return BigInt(route.total_fees || 0);
     });
 
     fees.sort();
