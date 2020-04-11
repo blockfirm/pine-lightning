@@ -15,8 +15,8 @@ export default class SessionServer {
     this.server.use(restify.plugins.throttle(config.rateLimit));
     this.server.use(authenticate);
 
-    this.server.post('/v1/lightning/sessions', this._startSession.bind(this));
-    this.server.del('/v1/lightning/sessions/:sessionId', this._endSession.bind(this));
+    this.server.post('/v1/lightning/sessions', this._wrapEndpoint(this._startSession));
+    this.server.del('/v1/lightning/sessions/:sessionId', this._wrapEndpoint(this._endSession));
   }
 
   start() {
@@ -30,6 +30,31 @@ export default class SessionServer {
   stop() {
     this.server.close();
     console.log('[SESSION] Server was stopped');
+  }
+
+  _wrapEndpoint(endpoint) {
+    return (request, response, next) => {
+      try {
+        return endpoint.call(this, request, response, next);
+      } catch (error) {
+        return this._handleUncaughtException(response, next, error);
+      }
+    };
+  }
+
+  _handleUncaughtException(response, next, error) {
+    const status = error.statusCode || 500;
+    const code = error.code || 'InternalServerError';
+
+    console.error(`[SESSION] ERROR ${status} ${code}: ${error.message}`);
+
+    if (status === 500) {
+      return next(
+        new errors.InternalServerError('An unexpected error occurred on the server')
+      );
+    }
+
+    return next(error);
   }
 
   _startSession(request, response, next) {
