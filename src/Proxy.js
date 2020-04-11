@@ -57,7 +57,7 @@ export default class Proxy {
       const method = methods[methodName];
 
       if (!method) {
-        this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
+        return this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
       }
 
       const lnd = this.lndNodeManager.getNodeByPineId(pineId);
