@@ -9,7 +9,7 @@ const getRevocationRootKey = proxyquire('../../mocks/client/methods/getRevocatio
 describe('test/mocks/client/methods/getRevocationRootKey.js', () => {
   describe('getRevocationRootKey()', () => {
     it('returns a private key', () => {
-      const request = {};
+      const request = { keyIndex: 0 };
       const expectedPrivateKey = Buffer.from('bfd64a37bf9aa89b3437880d0af6197fc79a4bde64c9a6458ccaae9d02dd61cb', 'hex');
 
       return getRevocationRootKey(request).then(response => {

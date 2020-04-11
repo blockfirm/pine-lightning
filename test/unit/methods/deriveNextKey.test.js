@@ -10,7 +10,8 @@ describe('test/mocks/client/methods/deriveNextKey.js', () => {
   describe('deriveNextKey()', () => {
     it('returns a key descriptor', () => {
       const request = {
-        keyFamily: 2
+        keyFamily: 2,
+        keyIndex: 1
       };
 
       const expectedKeyDescriptor = {

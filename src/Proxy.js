@@ -3,6 +3,10 @@ import { ClientServer, NodeServer, SessionServer } from './servers';
 import LndNodeManager from './lnd/LndNodeManager';
 import methods from './methods';
 
+const getRedisKey = (pineId, key) => (
+  `pine:lightning:user:${pineId}:${key}`
+);
+
 export default class Proxy {
   constructor(config) {
     this.config = config;
@@ -90,16 +94,36 @@ export default class Proxy {
     }
   }
 
-  _onNodeRequest({ pineId, methodName, request, callback }) {
-    try {
-      this.clientServer.sendRequest(pineId, methodName, request, callback);
-    } catch (error) {
-      console.error('[PROXY] Request Error:', error.message);
-      callback(error);
+  _annotateNodeRequest(pineId, methodName, request) {
+    return Promise.resolve().then(() => {
+      switch (methodName) {
+        case 'deriveNextKey':
+          return this.redis.incr(getRedisKey(pineId, 'key-index'))
+            .then(keyIndex => {
+              request.keyIndex = keyIndex;
+            });
 
-      if (!this.clientServer.isClientConnected(pineId)) {
-        this.lndNodeManager.stop(pineId);
+        case 'getRevocationRootKey':
+          return this.redis.incr(getRedisKey(pineId, 'revocation-root-key-index'))
+            .then(keyIndex => {
+              request.keyIndex = keyIndex;
+            });
       }
-    }
+    });
+  }
+
+  _onNodeRequest({ pineId, methodName, request, callback }) {
+    this._annotateNodeRequest(pineId, methodName, request)
+      .then(() => {
+        this.clientServer.sendRequest(pineId, methodName, request, callback);
+      })
+      .catch(error => {
+        console.error('[PROXY] Request Error:', error.message);
+        callback(error);
+
+        if (!this.clientServer.isClientConnected(pineId)) {
+          this.lndNodeManager.stop(pineId);
+        }
+      });
   }
 }

@@ -3,9 +3,8 @@ import config from '../config';
 
 const KEY_FAMILY_REVOCATION_ROOT = 5;
 
-const getRevocationRootKey = () => {
-  console.log(`getRevocationRootKey()`);
-  const keyIndex = 0; // TODO: Should increment so that a new key is always returned.
+const getRevocationRootKey = ({ keyIndex }) => {
+  console.log(`getRevocationRootKey(${keyIndex})`);
 
   const keyPair = getKeyPairFromMnemonic(
     config.mnemonic,

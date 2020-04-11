@@ -2,9 +2,8 @@ import getKeyPairFromMnemonic from '../crypto/getKeyPairFromMnemonic';
 import config from '../config';
 
 const deriveNextKey = (request) => {
-  console.log(`deriveNextKey(${request.keyFamily})`);
-  const { keyFamily } = request; // TODO: Only allow certain key families.
-  const keyIndex = 1; // TODO: Should increment so that a new key is always returned.
+  console.log(`deriveNextKey(${JSON.stringify(request)})`);
+  const { keyFamily, keyIndex } = request; // TODO: Only allow certain key families.
 
   const keyPair = getKeyPairFromMnemonic(
     config.mnemonic,
