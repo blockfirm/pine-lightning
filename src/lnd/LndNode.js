@@ -58,15 +58,15 @@ export default class LndNode extends events.EventEmitter {
       return Promise.resolve();
     }
 
+    // Force-kill node if it doesn't shut down gracefully in time.
+    setTimeout(() => {
+      this.process && this.process.forceKill();
+    }, killTimeout * 1000);
+
     if (!this.lnrpc) {
       this.process.kill();
       return Promise.resolve();
     }
-
-    // Force-kill node if it doesn't shut down gracefully in time.
-    setTimeout(() => {
-      this.process && this.process.kill();
-    }, killTimeout * 1000);
 
     return this.lnrpc.stopDaemon({}).catch(() => {
       this.process.kill();

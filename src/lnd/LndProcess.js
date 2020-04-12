@@ -48,16 +48,20 @@ export default class LndProcess extends events.EventEmitter {
     });
   }
 
-  kill() {
+  kill(signal = 'SIGTERM') {
     if (!this.process) {
       return;
     }
 
     try {
-      this.process.kill();
+      return this.process.kill(signal);
     } catch (error) {
-      console.error('[LND PROCESS] Failed to stop process:', error.message);
+      console.error(`[LND PROCESS] Failed to stop (${signal}) process:`, error.message);
     }
+  }
+
+  forceKill() {
+    return this.kill('SIGKILL');
   }
 
   isReady() {
