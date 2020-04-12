@@ -40,7 +40,8 @@ const config = {
       publicKey: '',
       host: 'localhost:10012'
     },
-    idleTimeout: 5, // Shut down node after 5 minutes of inactivity.
+    idleTimeout: 5, // (minutes) Shut down node after 5 minutes of inactivity.
+    killTimeout: 10, // (seconds) Force-kill node if it can't be shut down gracefully after 10 seconds.
     walletPassword: '6ae87cf6-050b-48e6-acc6-263996574e57'
   },
   redis: {

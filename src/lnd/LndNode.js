@@ -50,6 +50,8 @@ export default class LndNode extends events.EventEmitter {
   }
 
   stop() {
+    const { killTimeout } = this.config;
+
     console.log('[LND] Shutting down...');
 
     if (!this.process) {
@@ -60,6 +62,11 @@ export default class LndNode extends events.EventEmitter {
       this.process.kill();
       return Promise.resolve();
     }
+
+    // Force-kill node if it doesn't shut down gracefully in time.
+    setTimeout(() => {
+      this.process && this.process.kill();
+    }, killTimeout * 1000);
 
     return this.lnrpc.stopDaemon({}).catch(() => {
       this.process.kill();
