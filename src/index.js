@@ -1,20 +1,21 @@
 import config from './config';
 import Proxy from './Proxy';
+import logger from './logger';
 
 const proxy = new Proxy(config);
 
 proxy.start();
 
 const onExit = () => {
-  console.log('Gracefully shutting down...');
+  logger.info('Gracefully shutting down...');
 
   proxy.stop()
     .then(() => {
-      console.log('Graceful shutdown completed');
+      logger.info('Graceful shutdown completed');
       return 0;
     })
     .catch(error => {
-      console.log('Graceful shutdown failed with error:', error.message);
+      logger.error(`Graceful shutdown failed with error: ${error.message}`);
       return 1;
     })
     .then(code => {

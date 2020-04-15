@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+import logger from './logger';
 import { RedisClient } from './database';
 import { ClientServer, NodeServer, SessionServer } from './servers';
 import LndNodeManager from './lnd/LndNodeManager';
@@ -10,6 +12,7 @@ const getRedisKey = (pineId, key) => (
 export default class Proxy {
   constructor(config) {
     this.config = config;
+    this.logger = logger.child({ scope: 'Proxy' });
 
     this.redis = new RedisClient(config.redis);
     this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
@@ -44,11 +47,11 @@ export default class Proxy {
   _onClientConnect({ pineId }) {
     this.lndNodeManager.spawn(pineId)
       .catch(error => {
-        console.error('[PROXY] Spawn Error:', error.message);
+        this.logger.error(`Error when spawning client node: ${error.message}`, { pineId });
         return this.clientServer.sendError(pineId, 0, error);
       })
       .catch(error => {
-        console.error('[PROXY] Send Error:', error.message);
+        this.logger.error(`Error when sending error to client: ${error.message}`, { pineId });
       });
   }
 
@@ -61,27 +64,43 @@ export default class Proxy {
       const method = methods[methodName];
 
       if (!method) {
+        this.logger.error('Invalid client request method', { pineId });
         return this.clientServer.sendError(pineId, callId, new Error('Invalid method'));
       }
 
       const lnd = this.lndNodeManager.getNodeByPineId(pineId);
       const redis = this.redis;
 
+      this.logger.info(`Processing client request for method '${methodName}'...`, {
+        pineId,
+        methodName
+      });
+
       method({ request, pineId, lnd, redis })
         .then(response => {
           this.clientServer.sendResponse(pineId, callId, response);
         })
         .catch(error => {
+          this.logger.error(`Error when processing client request: ${error.message}`, {
+            pineId,
+            methodName
+          });
           this.clientServer.sendError(pineId, callId, error);
         })
         .catch(error => {
-          console.error('[PROXY] On client request error:', error.message);
+          this.logger.error(`Error when sending error to client: ${error.message}`, {
+            pineId,
+            methodName
+          });
         });
     } catch (error) {
       try {
         this.clientServer.sendError(pineId, callId, error);
       } catch (sendError) {
-        console.error('[PROXY] On client request error:', sendError.message);
+        this.logger.error(`Error when sending error to client: ${sendError.message}`, {
+          pineId,
+          methodName
+        });
       }
     }
   }
@@ -90,7 +109,7 @@ export default class Proxy {
     try {
       this.clientServer.sendEvent(pineId, 'ready');
     } catch (error) {
-      console.error('[PROXY] On ready error:', error.message);
+      this.logger.error(`Error when sending 'ready' event to client: ${error.message}`, { pineId });
     }
   }
 
@@ -113,12 +132,21 @@ export default class Proxy {
   }
 
   _onNodeRequest({ pineId, methodName, request, callback }) {
+    this.logger.info(`Processing node request for method '${methodName}'...`, {
+      pineId,
+      methodName
+    });
+
     this._annotateNodeRequest(pineId, methodName, request)
       .then(() => {
         this.clientServer.sendRequest(pineId, methodName, request, callback);
       })
       .catch(error => {
-        console.error('[PROXY] Request Error:', error.message);
+        this.logger.error(`Error when processing node request: ${error.message}`, {
+          pineId,
+          methodName
+        });
+
         callback(error);
 
         if (!this.clientServer.isClientConnected(pineId)) {

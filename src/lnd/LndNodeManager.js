@@ -1,5 +1,7 @@
 import events from 'events';
 import net from 'net';
+
+import logger from '../logger';
 import LndNode from './LndNode';
 
 const server = net.createServer();
@@ -22,6 +24,7 @@ export default class LndNodeManager extends events.EventEmitter {
     super();
 
     this.config = config;
+    this.logger = logger.child({ scope: 'LndNodeManager' });
     this.serverConfig = serverConfig;
     this.nodes = {};
   }
@@ -61,13 +64,13 @@ export default class LndNodeManager extends events.EventEmitter {
       })
       .catch(error => {
         this.stop(pineId);
-        throw new Error(`Unable to spawn lnd node: ${error.message}`);
+        throw new Error(`Unable to spawn LND user node: ${error.message}`);
       });
   }
 
   stop(pineId) {
     if (!pineId) {
-      return Promise.reject('Cannot stop a node without a Pine ID');
+      return Promise.reject('Cannot stop a user LND node without a Pine ID');
     }
 
     const node = this.getNodeByPineId(pineId);
@@ -88,7 +91,10 @@ export default class LndNodeManager extends events.EventEmitter {
     const { idleTimeout } = this.config;
     const node = this.getNodeByPineId(pineId);
 
+    this.logger.info('Idling user LND node...', { pineId });
+
     if (!node) {
+      this.logger.warn('Unable to idle user node: No node found', { pineId });
       return;
     }
 
@@ -97,6 +103,7 @@ export default class LndNodeManager extends events.EventEmitter {
     }
 
     node.shutdownTimer = setTimeout(() => {
+      this.logger.info('Idle timeout reached, shutting down user LND node...', { pineId });
       this.stop(pineId);
     }, idleTimeout * 60000);
   }

@@ -47,6 +47,10 @@ const config = {
   redis: {
     host: '127.0.0.1',
     port: 6379
+  },
+  log: {
+    level: 'info', // One of 'info', 'warn', 'error'.
+    dir: '/var/log/pine'
   }
 };
 

@@ -4,6 +4,7 @@ import events from 'events';
 import WebSocket from 'ws';
 import { RateLimiter } from 'limiter';
 
+import logger from '../logger';
 import { verifyPineSignature } from '../crypto';
 import { validateClientMessage } from '../validators';
 
@@ -29,6 +30,7 @@ export default class ClientServer extends events.EventEmitter {
     this.config = config;
     this.sessions = sessions;
     this.server = http.createServer();
+    this.logger = logger.child({ scope: 'ClientServer' });
 
     this.wss = new WebSocket.Server({
       maxPayload: config.maxPayload,
@@ -49,8 +51,7 @@ export default class ClientServer extends events.EventEmitter {
     );
 
     this.server.listen(port, host);
-
-    console.log(`[CLIENT] Server listening at ${host}:${port}`);
+    this.logger.info(`Client server is listening at ${host}:${port}`);
   }
 
   stop() {
@@ -60,7 +61,7 @@ export default class ClientServer extends events.EventEmitter {
     this.server.removeAllListeners();
     this.wss.removeAllListeners();
 
-    console.log('[CLIENT] Server was stopped');
+    this.logger.info('Client server was stopped');
   }
 
   // eslint-disable-next-line max-params
@@ -125,7 +126,10 @@ export default class ClientServer extends events.EventEmitter {
 
     Object.values(clients).forEach(ws => {
       if (ws.isAlive === false) {
-        console.error('[CLIENT] Ping failed, terminating...');
+        this.logger.warn('Client ping failed, terminating websocket...', {
+          pineId: ws.pineId
+        });
+
         return ws.terminate();
       }
 
@@ -170,7 +174,7 @@ export default class ClientServer extends events.EventEmitter {
     try {
       pineId = this._authenticateRequest(request);
     } catch (error) {
-      console.error('[CLIENT] Client authentication failed:', error.message);
+      this.logger.error(`Client authentication failed: ${error.message}`);
       return socket.destroy();
     }
 
@@ -195,8 +199,10 @@ export default class ClientServer extends events.EventEmitter {
 
     ws.on('message', (message) => {
       limiter.removeTokens(1, (error, remainingRequests) => {
-        if (error || remainingRequests < 1) {
-          console.error(`[CLIENT] ${pineId} has reached its rate limit`);
+        if (error) {
+          this.logger.error(`Client rate limiting failed with error: ${error.message}`, { pineId });
+        } else if (remainingRequests < 1) {
+          this.logger.error(`Client has reached its rate limit`, { pineId });
         } else {
           this._onClientMessage(ws, message);
         }
@@ -206,18 +212,18 @@ export default class ClientServer extends events.EventEmitter {
     ws.on('close', this._onClientDisconnect.bind(this, ws));
 
     this.emit('connect', ws);
-    console.log(`[CLIENT] ${pineId} connected`);
+    this.logger.info('New client connected', { pineId });
   }
 
   _onClientDisconnect(ws) {
     delete this.clients[ws.pineId];
     ws.removeAllListeners();
     this.emit('disconnect', ws);
-    console.log(`[CLIENT] ${ws.pineId} disconnected`);
+    this.logger.info('Client disconnected', { pineId: ws.pineId });
   }
 
   _onError(error) {
-    console.error('[CLIENT] Server error:', error.message);
+    this.logger.error(`Client server error: ${error.message}`);
   }
 
   // eslint-disable-next-line max-statements
@@ -233,7 +239,9 @@ export default class ClientServer extends events.EventEmitter {
       deserialized = deserializeClientMessage(message);
       deserialized = validateClientMessage(deserialized);
     } catch (error) {
-      return console.error('[CLIENT] Error when parsing message:', error.message);
+      return this.logger.error(`Error when parsing client message: ${error.message}`, {
+        pineId: ws.pineId
+      });
     }
 
     const { id, response, request, method, error } = deserialized;
@@ -249,7 +257,7 @@ export default class ClientServer extends events.EventEmitter {
     }
 
     if (!callback) {
-      return console.error('[CLIENT] No callback found for call');
+      return this.logger.error(`No callback found for call #${id}}`, { pineId: ws.pineId });
     }
 
     if (error) {

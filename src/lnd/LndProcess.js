@@ -1,7 +1,9 @@
+/* eslint-disable max-lines */
 import { spawn } from 'child_process';
 import path from 'path';
 import events from 'events';
 import makeDir from 'make-dir';
+import logger from '../logger';
 
 const STATE_NOT_STARTED = 0;
 const STATE_STARTED = 1;
@@ -23,6 +25,7 @@ export default class LndProcess extends events.EventEmitter {
 
     this.pineId = pineId;
     this.config = config;
+    this.logger = logger.child({ scope: 'LndProcess' });
     this.state = STATE_NOT_STARTED;
     this.cwd = this._getCwd();
   }
@@ -43,6 +46,11 @@ export default class LndProcess extends events.EventEmitter {
         '--autopilot.maxchannels=0'
       ];
 
+      this.logger.info(`Running ${bin} ${args.join(' ')}...`, {
+        pineId: this.pineId,
+        cwd
+      });
+
       this.process = runCmd(bin, args, cwd);
       this._postStart();
     });
@@ -50,13 +58,24 @@ export default class LndProcess extends events.EventEmitter {
 
   kill(signal = 'SIGTERM') {
     if (!this.process) {
-      return;
+      return this.logger.warn(`No LND process to kill (${signal})`, {
+        pineId: this.pineId,
+        signal
+      });
     }
 
     try {
+      this.logger.info(`Killing LND process (${signal})...`, {
+        pineId: this.pineId,
+        signal
+      });
+
       return this.process.kill(signal);
     } catch (error) {
-      console.error(`[LND PROCESS] Failed to stop (${signal}) process:`, error.message);
+      this.logger.error(`Failed to kill (${signal}) LND process: ${error.message}`, {
+        pineId: this.pineId,
+        signal
+      });
     }
   }
 
@@ -66,6 +85,20 @@ export default class LndProcess extends events.EventEmitter {
 
   isReady() {
     return this.state === STATE_READY;
+  }
+
+  _logProcessOutput(output, isStdErr = false) {
+    output.split('\n').forEach(line => {
+      if (!line.trim()) {
+        return;
+      }
+
+      if (isStdErr) {
+        this.logger.error(line.trim(), { pineId: this.pineId });
+      } else {
+        this.logger.info(line.trim(), { pineId: this.pineId });
+      }
+    });
   }
 
   _getCwd() {
@@ -78,7 +111,7 @@ export default class LndProcess extends events.EventEmitter {
 
   _postStart() {
     this.process.stdout.on('data', (chunk) => {
-      console.log('[LND OUTPUT]', chunk);
+      this._logProcessOutput(chunk);
 
       if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
         this.state = STATE_STARTED;
@@ -99,7 +132,7 @@ export default class LndProcess extends events.EventEmitter {
     });
 
     this.process.stderr.on('data', (chunk) => {
-      console.error('[LND ERROR]', chunk);
+      this._logProcessOutput(chunk, true);
 
       if (this.state < STATE_STARTED) {
         this.emit('error', new Error(chunk));
@@ -107,7 +140,7 @@ export default class LndProcess extends events.EventEmitter {
     });
 
     this.process.on('error', (error) => {
-      console.error('[LND ERROR]', error.message);
+      this.logger.error(`Error: ${error.message}`, { pineId: this.pineId });
       this.emit('error', error);
     });
 
@@ -122,6 +155,9 @@ export default class LndProcess extends events.EventEmitter {
     this.state = STATE_NOT_STARTED;
     this.emit('exit', code);
 
-    console.log('[LND] Node was shutdown with exit code', code);
+    this.logger.info(`LND process exited with code ${code}`, {
+      pineId: this.pineId,
+      exitCode: code
+    });
   }
 }

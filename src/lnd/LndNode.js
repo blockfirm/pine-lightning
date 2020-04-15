@@ -1,17 +1,25 @@
+/* eslint-disable max-lines */
 import events from 'events';
 import path from 'path';
 import createLnrpc from 'lnrpc';
+
+import logger from '../logger';
 import LndProcess from './LndProcess';
 
 export default class LndNode extends events.EventEmitter {
   constructor(pineId, config) {
     super();
+
+    this.pineId = pineId;
     this.config = config;
+    this.logger = logger.child({ scope: 'LndNode' });
     this.process = new LndProcess(pineId, config);
   }
 
   start() {
-    console.log('[LND] Starting node...');
+    this.logger.info(`Starting user LND node...`, {
+      pineId: this.pineId
+    });
 
     return new Promise((resolve, reject) => {
       this.process.once('started', () => {
@@ -52,7 +60,9 @@ export default class LndNode extends events.EventEmitter {
   stop() {
     const { killTimeout } = this.config;
 
-    console.log('[LND] Shutting down...');
+    this.logger.info('Shutting down user LND node...', {
+      pineId: this.pineId
+    });
 
     if (!this.process) {
       return Promise.resolve();
@@ -90,7 +100,9 @@ export default class LndNode extends events.EventEmitter {
   }
 
   unlock() {
-    console.log('[LND] Unlocking wallet...');
+    this.logger.info('Unlocking user LND wallet...', {
+      pineId: this.pineId
+    });
 
     const options = {
       // eslint-disable-next-line camelcase
@@ -101,7 +113,9 @@ export default class LndNode extends events.EventEmitter {
   }
 
   createWallet() {
-    console.log('[LND] Creating wallet...');
+    this.logger.info('Creating user LND wallet...', {
+      pineId: this.pineId
+    });
 
     // eslint-disable-next-line camelcase
     return this.lnrpc.genSeed({}).then(({ cipher_seed_mnemonic }) => {
@@ -116,7 +130,10 @@ export default class LndNode extends events.EventEmitter {
 
   connectToGateway() {
     const { gateway } = this.config;
-    console.log('[LND] Connecting node to gateway peer...');
+
+    this.logger.info('Connecting user LND node to gateway peer...', {
+      pineId: this.pineId
+    });
 
     const options = {
       addr: {
@@ -134,6 +151,10 @@ export default class LndNode extends events.EventEmitter {
   }
 
   isReady() {
+    this.logger.info('User LND node is ready', {
+      pineId: this.pineId
+    });
+
     return this.process.isReady();
   }
 

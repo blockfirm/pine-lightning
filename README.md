@@ -53,11 +53,15 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 5. Rename `src/config.template.js` to `src/config.js`
 6. Open `src/config.js` and enter all settings and credentials for your nodes
 
-7. Start the server in development mode:
+7. Create a log directory:
+    ```
+    $ mkdir /var/log/pine
+    ```
+8. Start the server in development mode:
     ```
     $ npm run dev
     ```
-8. Or build it and run in production mode:
+9. Or build it and run in production mode:
     ```
     $ npm run build
     $ npm start

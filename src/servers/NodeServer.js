@@ -1,6 +1,7 @@
 import events from 'events';
 import grpc from 'grpc';
 import * as protoLoader from '@grpc/proto-loader';
+import logger from '../logger';
 
 const getMethodsFromService = (service, handler) => {
   const methods = {};
@@ -46,17 +47,18 @@ export default class NodeServer extends events.EventEmitter {
 
     this.server = server;
     this.config = config;
+    this.logger = logger.child({ scope: 'NodeServer' });
   }
 
   start() {
     const { host, port } = this.config;
     this.server.start();
-    console.log(`[NODE] Server listening at ${host}:${port}`);
+    this.logger.info(`Node server is listening at ${host}:${port}`);
   }
 
   stop() {
     this.server.forceShutdown();
-    console.log('[NODE] Server was stopped');
+    this.logger.info('Node server was stopped');
   }
 
   _handleCall(methodName, call, callback) {

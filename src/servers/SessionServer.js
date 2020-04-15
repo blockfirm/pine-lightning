@@ -1,11 +1,14 @@
 import restify from 'restify';
 import errors from 'restify-errors';
 import uuidv4 from 'uuid/v4';
+
+import logger from '../logger';
 import { authenticate } from '../middlewares';
 
 export default class SessionServer {
   constructor(config) {
     this.config = config;
+    this.logger = logger.child({ scope: 'SessionServer' });
 
     this.sessions = {};
     this.server = restify.createServer();
@@ -15,6 +18,8 @@ export default class SessionServer {
     this.server.use(restify.plugins.throttle(config.rateLimit));
     this.server.use(authenticate);
 
+    this.server.on('after', this._onAfter.bind(this));
+
     this.server.post('/v1/lightning/sessions', this._wrapEndpoint(this._startSession));
     this.server.del('/v1/lightning/sessions/:sessionId', this._wrapEndpoint(this._endSession));
   }
@@ -23,13 +28,36 @@ export default class SessionServer {
     const { host, port } = this.config;
 
     this.server.listen(port, host, () => {
-      console.log(`[SESSION] Server listening at ${host}:${port}`);
+      this.logger.info(`Session server is listening at ${host}:${port}`);
     });
   }
 
   stop() {
     this.server.close();
-    console.log('[SESSION] Server was stopped');
+    this.logger.info('Session server was stopped');
+  }
+
+  // eslint-disable-next-line max-params
+  _onAfter(request, response, route, error) {
+    if (error) {
+      return this.logger.error(
+        `HTTP ${response.statusCode} ${response.statusMessage} ${request.method} ${request.url}: ${error.message}`, {
+          method: request.method,
+          route: route && route.path,
+          status: response.statusCode,
+          pineId: request.userId
+        }
+      );
+    }
+
+    this.logger.info(
+      `HTTP ${response.statusCode} ${response.statusMessage} ${request.method} ${route.path}`, {
+        method: request.method,
+        route: route.path,
+        status: response.statusCode,
+        pineId: request.userId
+      }
+    );
   }
 
   _wrapEndpoint(endpoint) {
@@ -46,7 +74,7 @@ export default class SessionServer {
     const status = error.statusCode || 500;
     const code = error.code || 'InternalServerError';
 
-    console.error(`[SESSION] ERROR ${status} ${code}: ${error.message}`);
+    this.logger.error(`Uncaught server error ${status} ${code}: ${error.message}`);
 
     if (status === 500) {
       return next(
@@ -65,8 +93,11 @@ export default class SessionServer {
     }
 
     const sessionId = uuidv4();
+
     this.sessions[sessionId] = request.userId;
     response.send({ sessionId });
+
+    return next();
   }
 
   _endSession(request, response, next) {
@@ -94,5 +125,7 @@ export default class SessionServer {
 
     delete this.sessions[sessionId];
     response.send(204);
+
+    return next();
   }
 }
