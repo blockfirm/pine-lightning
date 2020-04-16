@@ -6,7 +6,10 @@ import config from './config';
 
 const logger = winston.createLogger({
   level: config.log.level,
-  format: winston.format.json(),
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
   defaultMeta: {
     service: name,
     env: process.env.NODE_ENV
