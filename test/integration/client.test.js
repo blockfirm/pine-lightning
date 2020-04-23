@@ -290,4 +290,68 @@ describe('integration between Pine lnd and client', () => {
         return generateBlocks(10).then(() => wait(1500));
       });
   });
+
+  it('can open an inbound channel', () => {
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.openInboundChannel()
+      .then(channel => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(channel.fundingTxid, 'Funding txid is missing from response');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to open inbound channel: ${error.message}`);
+      });
+  });
+
+  it('can get pending inbound channel balance', () => {
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return client.getBalance()
+      .then(balance => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(balance.pending, 'Returned balance is not pending');
+          assert(balance.capacity === '40000', 'Returned incorrect capacity');
+          assert(balance.local === '1000', 'Returned incorrect local balance');
+          assert(balance.remote === '29950', 'Returned incorrect remote balance');
+          assert(balance.commitFee === '9050', 'Returned incorrect commit fee');
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to get pending inbound channel balance: ${error.message}`);
+      });
+  });
+
+  it('can close inbound channel', () => {
+    const errors = [];
+
+    client.on('error', error => errors.push(error));
+
+    return generateBlocks(10).then(() => wait(1500))
+      .then(() => {
+        return client.closeChannel();
+      })
+      .then(() => {
+        if (errors.length) {
+          assert(false, errors[0].message);
+        } else {
+          assert(true);
+        }
+      })
+      .catch(error => {
+        assert(false, `Unable to close inbound channel: ${error.message}`);
+      })
+      .then(() => {
+        return generateBlocks(10).then(() => wait(1500));
+      });
+  });
 });

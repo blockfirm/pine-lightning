@@ -95,6 +95,18 @@ export default class Client extends events.EventEmitter {
     });
   }
 
+  openInboundChannel() {
+    return new Promise((resolve, reject) => {
+      this.sendRequest('openInboundChannel', {}, (error, response) => {
+        if (error) {
+          return reject(error);
+        }
+
+        resolve(response);
+      });
+    });
+  }
+
   closeChannel() {
     return new Promise((resolve, reject) => {
       this.sendRequest('closeChannel', {}, (error, response) => {

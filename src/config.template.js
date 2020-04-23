@@ -38,7 +38,15 @@ const config = {
     ],
     gateway: {
       publicKey: '',
-      host: 'localhost:10012'
+      host: 'localhost:10012',
+      channel: {
+        fundingAmountSats: '300000', // Amount that the gateway node should commit to each user channel.
+        pushAmountSats: '150000' // Amount that should be given to the user when opening a new channel.
+      },
+      rpc: {
+        host: 'localhost:10000',
+        adminMacaroon: '~/.lnd/data/chain/bitcoin/simnet/admin.macaroon'
+      }
     },
     idleTimeout: 5, // (minutes) Shut down node after 5 minutes of inactivity.
     killTimeout: 10, // (seconds) Force-kill node if it can't be shut down gracefully after 10 seconds.

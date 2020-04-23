@@ -2,6 +2,7 @@
 import logger from './logger';
 import { RedisClient } from './database';
 import { ClientServer, NodeServer, SessionServer } from './servers';
+import LndGateway from './lnd/LndGateway';
 import LndNodeManager from './lnd/LndNodeManager';
 import methods from './methods';
 
@@ -15,6 +16,7 @@ export default class Proxy {
     this.logger = logger.child({ scope: 'Proxy' });
 
     this.redis = new RedisClient(config.redis);
+    this.gateway = new LndGateway(config.lnd.gateway);
     this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
     this.sessionServer = new SessionServer(config.servers.session);
     this.clientServer = new ClientServer(config.servers.client, this.sessionServer.sessions);
@@ -69,14 +71,14 @@ export default class Proxy {
       }
 
       const lnd = this.lndNodeManager.getNodeByPineId(pineId);
-      const redis = this.redis;
+      const { gateway, redis } = this;
 
       this.logger.info(`Processing client request for method '${methodName}'...`, {
         pineId,
         methodName
       });
 
-      method({ request, pineId, lnd, redis })
+      method({ request, pineId, lnd, gateway, redis })
         .then(response => {
           this.clientServer.sendResponse(pineId, callId, response);
         })
