@@ -12,12 +12,13 @@ const estimateFee = ({ request, lnd }) => {
   const { paymentRequest } = request;
   const decodedPaymentRequest = bolt11.decode(paymentRequest);
   const { satoshis, millisatoshis, payeeNodeKey } = decodedPaymentRequest;
+  const query = { pub_key: payeeNodeKey };
 
-  const query = {
-    pub_key: payeeNodeKey,
-    amt: satoshis.toString(),
-    amt_msat: millisatoshis
-  };
+  if (satoshis) {
+    query.amt = satoshis.toString();
+  } else {
+    query.amt_msat = millisatoshis;
+  }
 
   return lnd.lnrpc.queryRoutes(query).then(({ routes }) => {
     if (!routes || !routes.length) {
