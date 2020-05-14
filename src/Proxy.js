@@ -17,7 +17,7 @@ export default class Proxy {
 
     this.redis = new RedisClient(config.redis);
     this.gateway = new LndGateway(config.lnd.gateway);
-    this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node);
+    this.lndNodeManager = new LndNodeManager(config.lnd, config.servers.node, this.redis);
     this.sessionServer = new SessionServer(config.servers.session);
     this.clientServer = new ClientServer(config.servers.client, this.sessionServer.sessions);
     this.nodeServer = new NodeServer(config.servers.node);

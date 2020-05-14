@@ -20,12 +20,13 @@ const getUnusedPort = () => {
 };
 
 export default class LndNodeManager extends events.EventEmitter {
-  constructor(config, serverConfig) {
+  constructor(config, serverConfig, redis) {
     super();
 
     this.config = config;
     this.logger = logger.child({ scope: 'LndNodeManager' });
     this.serverConfig = serverConfig;
+    this.redis = redis;
     this.nodes = {};
   }
 
@@ -58,6 +59,13 @@ export default class LndNodeManager extends events.EventEmitter {
         this.nodes[pineId] = node;
 
         return node.start();
+      })
+      .then(() => {
+        return this.nodes[pineId].getInfo();
+      })
+      .then(({ identityPubKey }) => {
+        this.redis.set(`pine:lightning:node:${identityPubKey}:pine-id`, pineId);
+        this.redis.set(`pine:lightning:user:${pineId}:identity-pubkey`, identityPubKey);
       })
       .then(() => {
         this._onNodeReady(pineId);

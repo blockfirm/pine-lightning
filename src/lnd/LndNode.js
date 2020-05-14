@@ -158,6 +158,12 @@ export default class LndNode extends events.EventEmitter {
     return this.process.isReady();
   }
 
+  getInfo() {
+    return this.lnrpc.getInfo({}).then(info => ({
+      identityPubKey: info.identity_pubkey
+    }));
+  }
+
   _onExit() {
     this.process.removeAllListeners();
     this.process = null;
