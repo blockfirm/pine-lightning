@@ -119,7 +119,7 @@ export default class Proxy {
     return Promise.resolve().then(() => {
       switch (methodName) {
         case 'deriveNextKey':
-          return this.redis.incr(getRedisKey(pineId, 'key-index'))
+          return this.redis.incr(getRedisKey(pineId, `key-family:${request.keyFamily}:key-index`))
             .then(keyIndex => {
               request.keyIndex = keyIndex;
             });
