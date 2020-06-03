@@ -1,7 +1,7 @@
 Pine Lightning
 ==============
 
-A bridge between a [customized version of lnd](https://github.com/timothyej/lnd) and the [Pine](https://pine.pm) app for signing transactions using keys owned by the user residing on the user's device.
+A bridge between a [customized version of lnd](https://github.com/blockfirm/pine-lnd) and the [Pine](https://pine.pm) app for signing transactions using keys owned by the user residing on the user's device.
 
 ## Table of Contents
 
@@ -33,13 +33,13 @@ A bridge between a [customized version of lnd](https://github.com/timothyej/lnd)
 ## Dependencies
 
 * [Node.js](https://nodejs.org) (`v12`) and [gRPC](https://grpc.io) for creating the RPC API
-* [Pine lnd](https://github.com/timothyej/lnd) as lightning node without private keys
+* [Pine lnd](https://github.com/blockfirm/pine-lnd) as lightning node without private keys
 * [Redis](https://redis.io) for caching channel info to be used by the Pine Payment Server
 * [btcwallet](https://github.com/btcsuite/btcwallet) and [btcd](https://github.com/btcsuite/btcd) for mocking a wallet during development (*optional*)
 
 ## Getting started
 
-1. Install [btcd](https://github.com/btcsuite/btcd), [btcwallet](https://github.com/btcsuite/btcwallet), and [Pine lnd](https://github.com/timothyej/lnd)
+1. Install [btcd](https://github.com/btcsuite/btcd), [btcwallet](https://github.com/btcsuite/btcwallet), and [Pine lnd](https://github.com/blockfirm/pine-lnd)
 2. Start the btcd node, btcwallet, and Pine lnd node
 3. Clone this repo:
     ```
