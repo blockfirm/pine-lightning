@@ -22,7 +22,7 @@ const config = {
       }
     },
     node: {
-      proto: 'protos/node.proto',
+      proto: 'protos/rpc.proto',
       host: 'localhost',
       port: 8910
     }
