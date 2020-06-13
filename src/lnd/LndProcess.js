@@ -111,7 +111,9 @@ export default class LndProcess extends events.EventEmitter {
 
   _postStart() {
     this.process.stdout.on('data', (chunk) => {
-      this._logProcessOutput(chunk);
+      const isError = chunk.indexOf('[ERR]') > -1;
+
+      this._logProcessOutput(chunk, isError);
 
       if (chunk.indexOf('Waiting for wallet encryption password') > -1) {
         this.state = STATE_STARTED;
