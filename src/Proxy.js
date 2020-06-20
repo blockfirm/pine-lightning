@@ -6,6 +6,8 @@ import LndGateway from './lnd/LndGateway';
 import LndNodeManager from './lnd/LndNodeManager';
 import methods from './methods';
 
+const NODE_REQUEST_TIMEOUT = 30 * 1000; // 30 seconds.
+
 const getRedisKey = (pineId, key) => (
   `pine:lightning:user:${pineId}:${key}`
 );
@@ -141,7 +143,24 @@ export default class Proxy {
 
     this._annotateNodeRequest(pineId, methodName, request)
       .then(() => {
-        this.clientServer.sendRequest(pineId, methodName, request, callback);
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Request timed out'));
+          }, NODE_REQUEST_TIMEOUT);
+
+          try {
+            this.clientServer.sendRequest(pineId, methodName, request, function () {
+              clearTimeout(timeout);
+              resolve(arguments);
+            });
+          } catch (error) {
+            clearTimeout(timeout);
+            reject(error);
+          }
+        });
+      })
+      .then(function (args) {
+        callback(...args);
       })
       .catch(error => {
         this.logger.error(`Error when processing node request: ${error.message}`, {
