@@ -8,7 +8,8 @@ import logger from '../logger';
 const STATE_NOT_STARTED = 0;
 const STATE_STARTED = 1;
 const STATE_UNLOCKED = 3;
-const STATE_READY = 4;
+const STATE_SYNCING = 4
+const STATE_READY = 5;
 
 const runCmd = (cmd, args, cwd) => {
   const child = spawn(cmd, args, { cwd });
@@ -83,6 +84,10 @@ export default class LndProcess extends events.EventEmitter {
     return this.kill('SIGKILL');
   }
 
+  isSyncing() {
+    return this.state === STATE_SYNCING;
+  }
+
   isReady() {
     return this.state === STATE_READY;
   }
@@ -110,6 +115,7 @@ export default class LndProcess extends events.EventEmitter {
   }
 
   _postStart() {
+    // eslint-disable-next-line max-statements
     this.process.stdout.on('data', (chunk) => {
       const isError = chunk.indexOf('[ERR]') > -1;
 
@@ -123,6 +129,18 @@ export default class LndProcess extends events.EventEmitter {
       if (chunk.indexOf('LightningWallet opened') > -1) {
         this.state = STATE_UNLOCKED;
         this.emit('unlocked');
+      }
+
+      if (chunk.indexOf('Syncing channel graph') > -1 || chunk.indexOf('Catching up block hashes') > -1) {
+        if (this.state === STATE_UNLOCKED) {
+          this.state = STATE_SYNCING;
+        }
+      }
+
+      if (chunk.indexOf('Graph pruning complete') > -1 || chunk.indexOf('Done catching up block hashes') > -1) {
+        if (this.state === STATE_SYNCING) {
+          this.state = STATE_UNLOCKED;
+        }
       }
 
       if (chunk.indexOf('Updating backup file') > -1) {

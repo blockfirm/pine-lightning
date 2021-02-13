@@ -106,11 +106,20 @@ export default class LndNodeManager extends events.EventEmitter {
       return;
     }
 
-    if (!node.isReady()) {
+    if (!node.isSyncing() && !node.isReady()) {
       return this.stop(pineId);
     }
 
     node.shutdownTimer = setTimeout(() => {
+      if (node.isSyncing()) {
+        this.logger.info(
+          'Idle timeout reached but node is syncing so reset idle process until it is finished',
+          { pineId }
+        );
+
+        return this.idle(pineId);
+      }
+
       this.logger.info('Idle timeout reached, shutting down user LND node...', { pineId });
       this.stop(pineId);
     }, idleTimeout * 60000);

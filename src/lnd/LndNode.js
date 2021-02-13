@@ -150,6 +150,10 @@ export default class LndNode extends events.EventEmitter {
     });
   }
 
+  isSyncing() {
+    return this.process.isSyncing();
+  }
+
   isReady() {
     return this.process.isReady();
   }
