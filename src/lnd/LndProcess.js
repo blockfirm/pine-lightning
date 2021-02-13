@@ -128,7 +128,10 @@ export default class LndProcess extends events.EventEmitter {
       if (chunk.indexOf('Updating backup file') > -1) {
         if (this.state !== STATE_READY) {
           this.state = STATE_READY;
-          this.emit('ready');
+
+          setTimeout(() => {
+            this.emit('ready');
+          }, 1500);
         }
       }
     });
