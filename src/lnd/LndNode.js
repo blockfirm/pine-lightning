@@ -151,10 +151,6 @@ export default class LndNode extends events.EventEmitter {
   }
 
   isReady() {
-    this.logger.info('User LND node is ready', {
-      pineId: this.pineId
-    });
-
     return this.process.isReady();
   }
 
