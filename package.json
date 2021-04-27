@@ -37,7 +37,7 @@
     "limiter": "^1.1.5",
     "lnrpc": "^0.6.2",
     "make-dir": "^3.0.2",
-    "redis": "^2.8.0",
+    "redis": "^3.1.1",
     "restify": "^8.5.1",
     "restify-errors": "^8.0.2",
     "secp256k1": "^3.8.0",
